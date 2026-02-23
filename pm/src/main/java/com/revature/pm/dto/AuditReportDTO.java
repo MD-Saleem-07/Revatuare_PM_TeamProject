@@ -19,6 +19,7 @@ public class AuditReportDTO {
 	public int getTotalPasswords() {
 		return totalPasswords;
 	}
+	
 
 	public void setTotalPasswords(int totalPasswords) {
 		this.totalPasswords = totalPasswords;

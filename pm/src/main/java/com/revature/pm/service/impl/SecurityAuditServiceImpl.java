@@ -32,6 +32,7 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
         this.userRepository = userRepository;
         this.passwordEntryRepository = passwordEntryRepository;
     }
+    
 
     @Override
     public AuditReportDTO generateAuditReportByUsername(String username) {
