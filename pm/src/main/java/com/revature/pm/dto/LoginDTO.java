@@ -2,20 +2,30 @@ package com.revature.pm.dto;
 
 public class LoginDTO {
 
-    private String username;
-    private String password;
-	public String getUsername() {
-		return username;
-	}
-	public void setUsername(String username) {
-		this.username = username;
-	}
-	public String getPassword() {
-		return password;
-	}
-	public void setPassword(String password) {
-		this.password = password;
-	}
+    private String usernameOrEmail;
+    private String masterPassword;
 
-    
+    public LoginDTO() {
+    }
+
+    public LoginDTO(String usernameOrEmail, String masterPassword) {
+        this.usernameOrEmail = usernameOrEmail;
+        this.masterPassword = masterPassword;
+    }
+
+    public String getUsernameOrEmail() {
+        return usernameOrEmail;
+    }
+
+    public void setUsernameOrEmail(String usernameOrEmail) {
+        this.usernameOrEmail = usernameOrEmail;
+    }
+
+    public String getMasterPassword() {
+        return masterPassword;
+    }
+
+    public void setMasterPassword(String masterPassword) {
+        this.masterPassword = masterPassword;
+    }
 }

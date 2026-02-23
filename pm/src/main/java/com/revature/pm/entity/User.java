@@ -1,6 +1,7 @@
 package com.revature.pm.entity;
 
 import jakarta.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -10,56 +11,105 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String email;
 
-    private String password;
+    @Column(nullable = false)
+    private String masterPassword;   // Will be BCrypt hashed
 
-    private String role = "ROLE_USER";
+    @Column
+    private String phoneNumber;
 
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
-	public String getEmail() {
-		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
-	}
-
-	public String getRole() {
-		return role;
-	}
-
-	public void setRole(String role) {
-		this.role = role;
-	}
+    @Column
+    private boolean twoFactorEnabled;
 
     
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PasswordEntry> passwordEntries;
+
     
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SecurityQuestion> securityQuestions;
+
+    public User() {
+    }
+
+    public User(Long id, String username, String email, String masterPassword,
+                String phoneNumber, boolean twoFactorEnabled) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.masterPassword = masterPassword;
+        this.phoneNumber = phoneNumber;
+        this.twoFactorEnabled = twoFactorEnabled;
+    }
+
+    
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getMasterPassword() {
+        return masterPassword;
+    }
+
+    public void setMasterPassword(String masterPassword) {
+        this.masterPassword = masterPassword;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public boolean isTwoFactorEnabled() {
+        return twoFactorEnabled;
+    }
+
+    public void setTwoFactorEnabled(boolean twoFactorEnabled) {
+        this.twoFactorEnabled = twoFactorEnabled;
+    }
+
+    public List<PasswordEntry> getPasswordEntries() {
+        return passwordEntries;
+    }
+
+    public void setPasswordEntries(List<PasswordEntry> passwordEntries) {
+        this.passwordEntries = passwordEntries;
+    }
+
+    public List<SecurityQuestion> getSecurityQuestions() {
+        return securityQuestions;
+    }
+
+    public void setSecurityQuestions(List<SecurityQuestion> securityQuestions) {
+        this.securityQuestions = securityQuestions;
+    }
 }
