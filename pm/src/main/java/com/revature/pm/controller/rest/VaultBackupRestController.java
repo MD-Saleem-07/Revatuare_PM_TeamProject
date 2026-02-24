@@ -1,4 +1,4 @@
-package com.revature.pm.controller;
+package com.revature.pm.controller.rest;
 
 import com.revature.pm.service.VaultBackupService;
 import org.springframework.beans.factory.annotation.Autowired;

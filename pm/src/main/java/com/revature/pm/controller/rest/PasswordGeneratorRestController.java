@@ -1,4 +1,4 @@
-package com.revature.pm.controller;
+package com.revature.pm.controller.rest;
 
 import com.revature.pm.dto.PasswordGenerationRequestDTO;
 import com.revature.pm.service.PasswordGeneratorService;

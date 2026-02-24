@@ -20,6 +20,9 @@ import com.revature.pm.dto.SecurityQuestionDTO;
 import com.revature.pm.entity.SecurityQuestion;
 import com.revature.pm.entity.User;
 import com.revature.pm.entity.VerificationCode;
+import com.revature.pm.exception.InvalidOperationException;
+import com.revature.pm.exception.ResourceAlreadyExistsException;
+import com.revature.pm.exception.ResourceNotFoundException;
 import com.revature.pm.repository.SecurityQuestionRepository;
 import com.revature.pm.repository.UserRepository;
 import com.revature.pm.repository.VerificationCodeRepository;
@@ -186,7 +189,7 @@ public class AuthServiceImpl implements AuthService {
 		logger.info("2FA disabled successfully for user ID: {}", userId);
 	}
 
-	@Override
+	
 	public String generateVerificationCode(User user) {
 
 		logger.info("Generating verification code for user: {}", user.getUsername());
