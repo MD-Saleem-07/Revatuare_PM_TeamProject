@@ -3,6 +3,8 @@ package com.revature.pm.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import org.apache.catalina.User;
+
 @Entity
 @Table(name = "password_entries")
 public class PasswordEntry {
