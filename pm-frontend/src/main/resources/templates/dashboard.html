@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main :: layout(~{::section})}">
+
+<section>
+
+	<div class="d-flex justify-content-between align-items-center mb-4">
+		<div>
+			<h2 class="fw-bold mb-1">Executive Dashboard</h2>
+			<p class="text-muted mb-0">
+				Overview of your password security performance
+			</p>
+		</div>
+
+		<a href="/vault/add" class="btn btn-primary">
+			<i class="bi bi-plus-circle"></i> Add Password
+		</a>
+	</div>
+
+	<div class="row g-4 mb-5">
+
+		<div class="col-md-3">
+			<div class="card text-center p-4 bg-primary text-white h-100">
+				<h6 class="text-uppercase small mb-2">Total Passwords</h6>
+				<h2 class="fw-bold" th:text="${stats.totalPasswords}">0</h2>
+			</div>
+		</div>
+
+		<div class="col-md-3">
+			<div class="card text-center p-4 bg-danger text-white h-100">
+				<h6 class="text-uppercase small mb-2">Weak Passwords</h6>
+				<h2 class="fw-bold" th:text="${stats.weakPasswords}">0</h2>
+			</div>
+		</div>
+
+		<div class="col-md-3">
+			<div class="card text-center p-4 bg-warning text-dark h-100">
+				<h6 class="text-uppercase small mb-2">Reused Passwords</h6>
+				<h2 class="fw-bold" th:text="${stats.reusedPasswords}">0</h2>
+			</div>
+		</div>
+
+		<div class="col-md-3">
+			<div class="card text-center p-4 bg-success text-white h-100">
+				<h6 class="text-uppercase small mb-2">Strong Passwords</h6>
+				<h2 class="fw-bold" th:text="${stats.strongPasswords}">0</h2>
+			</div>
+		</div>
+
+	</div>
+
+
+	<div class="card p-4 mb-5">
+
+		<h5 class="fw-bold mb-3">Security Health Indicator</h5>
+
+		<div class="progress rounded-pill" style="height: 28px;">
+
+			<div id="securityBar" class="progress-bar fw-semibold" role="progressbar" style="width: 0%">
+				0%
+			</div>
+
+		</div>
+
+		<small class="text-muted mt-3 d-block">
+			Score calculated from weak and reused passwords.
+		</small>
+
+	</div>
+
+
+	<div class="mb-3">
+		<h5 class="fw-bold">Quick Actions</h5>
+		<p class="text-muted small">
+			Perform common security tasks instantly
+		</p>
+	</div>
+
+	<div class="row g-4">
+
+		<div class="col-md-3">
+			<a href="/vault" class="text-decoration-none">
+				<div class="card text-center p-4 h-100 hover-lift">
+					<i class="bi bi-folder2-open text-primary" style="font-size: 36px;"></i>
+					<p class="mt-3 mb-0 fw-semibold">Open Vault</p>
+				</div>
+			</a>
+		</div>
+
+		<div class="col-md-3">
+			<a href="/generator" class="text-decoration-none">
+				<div class="card text-center p-4 h-100 hover-lift">
+					<i class="bi bi-key text-warning" style="font-size: 36px;"></i>
+					<p class="mt-3 mb-0 fw-semibold">Generate Password</p>
+				</div>
+			</a>
+		</div>
+
+		<div class="col-md-3">
+			<a href="/audit" class="text-decoration-none">
+				<div class="card text-center p-4 h-100 hover-lift">
+					<i class="bi bi-shield-lock text-success" style="font-size: 36px;"></i>
+					<p class="mt-3 mb-0 fw-semibold">Security Audit</p>
+				</div>
+			</a>
+		</div>
+
+		<div class="col-md-3">
+			<a href="/backup" class="text-decoration-none">
+				<div class="card text-center p-4 h-100 hover-lift">
+					<i class="bi bi-cloud-arrow-down text-info" style="font-size: 36px;"></i>
+					<p class="mt-3 mb-0 fw-semibold">Backup Vault</p>
+				</div>
+			</a>
+		</div>
+
+	</div>
+
+
+	<div id="dashboardData" th:data-total="${stats.totalPasswords}" th:data-weak="${stats.weakPasswords}"
+		th:data-reused="${stats.reusedPasswords}">
+	</div>
+
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+
+			const dataDiv = document.getElementById("dashboardData");
+
+			const total = parseInt(dataDiv.dataset.total || 0);
+			const weak = parseInt(dataDiv.dataset.weak || 0);
+			const reused = parseInt(dataDiv.dataset.reused || 0);
+
+			let score = 100;
+
+			if (total > 0) {
+				score -= (weak * 10);
+				score -= (reused * 5);
+			}
+
+			if (score < 0) score = 0;
+			if (score > 100) score = 100;
+
+			const bar = document.getElementById("securityBar");
+
+			bar.style.width = score + "%";
+			bar.innerText = score + "%";
+
+			bar.classList.remove("bg-success", "bg-warning", "bg-danger");
+
+			if (score < 40) {
+				bar.classList.add("bg-danger");
+			} else if (score < 70) {
+				bar.classList.add("bg-warning");
+			} else {
+				bar.classList.add("bg-success");
+			}
+
+		});
+	</script>
+
+</section>
+
+</html>

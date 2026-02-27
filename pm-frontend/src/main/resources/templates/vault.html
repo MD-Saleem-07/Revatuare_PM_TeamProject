@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main :: layout(~{::section})}">
+
+<section>
+
+	<div class="d-flex justify-content-between align-items-center mb-4">
+		<div>
+			<h2 class="fw-bold mb-1">Password Vault</h2>
+			<p class="text-muted mb-0">Securely manage your saved credentials</p>
+		</div>
+
+		<div class="d-flex gap-2">
+
+			<a href="/dashboard" class="btn btn-outline-secondary">
+				<i class="bi bi-arrow-left"></i> Dashboard
+			</a>
+
+			<a href="/vault/add" class="btn btn-primary">
+				<i class="bi bi-plus-circle"></i> Add Password
+			</a>
+
+			<a href="/backup/export" class="btn btn-outline-success">
+				<i class="bi bi-download"></i> Export
+			</a>
+
+			<form action="/backup/import" method="post" enctype="multipart/form-data" class="d-inline">
+				<label class="btn btn-outline-info mb-0">
+					<i class="bi bi-upload"></i> Import
+					<input type="file" name="file" hidden onchange="this.form.submit()" required>
+				</label>
+			</form>
+
+		</div>
+	</div>
+
+
+
+	<div class="card p-4 mb-4">
+		<div class="row g-3">
+
+			<div class="col-md-4">
+				<form method="get" action="/vault/search" class="input-group">
+					<input type="text" name="keyword" class="form-control" placeholder="Search passwords..."
+						th:value="${param.keyword}">
+					<button class="btn btn-primary">
+						<i class="bi bi-search"></i>
+					</button>
+				</form>
+			</div>
+
+			<div class="col-md-3">
+				<form method="get" action="/vault/filter" class="input-group">
+					<select name="category" class="form-select">
+						<option value="">All Categories</option>
+						<option>Social</option>
+						<option>Email</option>
+						<option>Banking</option>
+						<option>Shopping</option>
+						<option>Work</option>
+						<option>Entertainment</option>
+						<option>Other</option>
+					</select>
+					<button class="btn btn-outline-secondary">Filter</button>
+				</form>
+			</div>
+
+			<div class="col-md-3">
+				<form method="get" action="/vault/sort" class="input-group">
+					<select name="sortBy" class="form-select">
+						<option value="created">Newest</option>
+						<option value="name">Name</option>
+						<option value="modified">Recently Modified</option>
+					</select>
+					<button class="btn btn-outline-secondary">Sort</button>
+				</form>
+			</div>
+
+			<div class="col-md-2 text-end">
+				<a th:href="@{/vault}" class="btn btn-outline-secondary btn-sm w-100 mb-2">
+					All
+				</a>
+				<a th:href="@{/vault/favorites}" class="btn btn-warning btn-sm w-100">
+					⭐ Favorites
+				</a>
+			</div>
+
+		</div>
+	</div>
+
+
+
+	<div class="card">
+		<div class="table-responsive">
+			<table class="table table-hover align-middle mb-0">
+
+				<thead class="table-light">
+					<tr>
+						<th>Account</th>
+						<th>Username</th>
+						<th>Password</th>
+						<th>Category</th>
+						<th class="text-center">Fav</th>
+						<th class="text-end">Actions</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					<tr th:each="p : ${passwords}">
+
+						<td th:text="${p.accountName}"></td>
+						<td th:text="${p.loginUsername}"></td>
+
+						<td>
+							<div class="d-flex align-items-center gap-2">
+								<input type="password" class="form-control form-control-sm" style="max-width:170px;"
+									th:id="'pwd-' + ${p.id}" value="********" readonly>
+
+								<button class="btn btn-sm btn-outline-secondary"
+									th:onclick="'openMasterPasswordModal(' + ${p.id} + ')'">
+									<i class="bi bi-eye"></i>
+								</button>
+
+								<button class="btn btn-sm btn-outline-success"
+									th:onclick="'copyPassword(' + ${p.id} + ')'">
+									<i class="bi bi-clipboard"></i>
+								</button>
+							</div>
+						</td>
+
+						<td>
+							<span class="badge bg-secondary" th:text="${p.category}">
+							</span>
+						</td>
+
+						<td class="text-center">
+							<button type="button" class="btn btn-sm" th:id="'fav-' + ${p.id}"
+								th:onclick="'toggleFavorite(' + ${p.id} + ')'">
+								<i th:class="${p.favorite} ?
+                            'bi bi-star-fill text-warning' :
+                            'bi bi-star text-muted'">
+								</i>
+							</button>
+						</td>
+
+						<td class="text-end">
+							<button class="btn btn-sm btn-outline-primary"
+								th:onclick="'requestOperationOtp(' + ${p.id} + ', \'edit\')'">
+								Edit
+							</button>
+
+							<button class="btn btn-sm btn-outline-danger"
+								th:onclick="'requestOperationOtp(' + ${p.id} + ', \'delete\')'">
+								Delete
+							</button>
+						</td>
+
+					</tr>
+				</tbody>
+
+			</table>
+		</div>
+	</div>
+
+
+	<nav th:if="${totalPages > 1}" class="mt-4">
+		<ul class="pagination justify-content-center">
+			<li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+				<a class="page-link" th:href="@{/vault(page=${currentPage - 1})}">
+					Previous
+				</a>
+			</li>
+
+			<li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+				th:classappend="${i == currentPage} ? 'active'">
+				<a class="page-link" th:href="@{/vault(page=${i})}" th:text="${i + 1}">
+				</a>
+			</li>
+
+			<li class="page-item" th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
+				<a class="page-link" th:href="@{/vault(page=${currentPage + 1})}">
+					Next
+				</a>
+			</li>
+		</ul>
+	</nav>
+
+
+	<div class="modal fade" id="masterPasswordModal" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">
+						<i class="bi bi-shield-lock"></i> Verify Master Password
+					</h5>
+					<button class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body">
+					<div id="masterPasswordError" class="alert alert-danger d-none">
+						Invalid Master Password
+					</div>
+					<div class="input-group">
+						<input type="password" id="masterPasswordInput" class="form-control"
+							placeholder="Enter Master Password">
+						<button class="btn btn-outline-secondary" type="button" onclick="toggleMasterPassword()">
+							<i class="bi bi-eye"></i>
+						</button>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+					<button class="btn btn-primary" onclick="verifyMasterPassword()">Verify</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	<div class="modal fade" id="operationOtpModal" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+
+				<div class="modal-header bg-warning">
+					<h5 class="modal-title">
+						<i class="bi bi-shield-lock"></i> OTP Verification
+					</h5>
+					<button class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+
+				<div class="modal-body">
+
+					<p>Generated OTP:
+						<strong id="generatedOtpText" class="text-primary"></strong>
+					</p>
+
+					<input type="text" id="operationOtpInput" class="form-control" placeholder="Enter OTP">
+
+					<div id="operationOtpError" class="alert alert-danger mt-3 d-none">
+						Invalid OTP
+					</div>
+
+				</div>
+
+				<div class="modal-footer">
+					<button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+					<button class="btn btn-warning" onclick="verifyOperationOtp()">Verify</button>
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+
+	<div class="toast-container position-fixed top-0 end-0 p-3">
+		<div id="copyToast" class="toast text-bg-success border-0">
+			<div class="d-flex">
+				<div class="toast-body">
+					<i class="bi bi-check-circle me-2"></i>
+					Password copied!
+				</div>
+				<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast">
+				</button>
+			</div>
+		</div>
+	</div>
+
+
+	<div class="modal fade" id="twoFaRequiredModal" tabindex="-1">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+
+				<div class="modal-header bg-warning">
+					<h5 class="modal-title">
+						<i class="bi bi-shield-lock me-2"></i>
+						Two-Factor Authentication Required
+					</h5>
+					<button class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+
+				<div class="modal-body text-center">
+					<p class="mb-3">
+						To perform <strong>Edit</strong> or <strong>Delete</strong> operations,
+						you must enable Two-Factor Authentication.
+					</p>
+
+					<a href="/settings" class="btn btn-primary">
+						Go to Settings
+					</a>
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+
+	<script>
+
+		let selectedEntryId = null;
+		let selectedId = null;
+		let selectedAction = null;
+
+		function openMasterPasswordModal(id) {
+			selectedEntryId = id;
+			document.getElementById("masterPasswordInput").value = "";
+			document.getElementById("masterPasswordError")
+				.classList.add("d-none");
+			new bootstrap.Modal(
+				document.getElementById("masterPasswordModal")
+			).show();
+		}
+
+		function verifyMasterPassword() {
+			const pwd =
+				document.getElementById("masterPasswordInput").value;
+
+			fetch(`/vault/view/${selectedEntryId}`, {
+				method: "POST",
+				headers: {"Content-Type": "application/json"},
+				body: JSON.stringify({masterPassword: pwd})
+			})
+				.then(res => {
+					if (!res.ok) throw new Error();
+					return res.text();
+				})
+				.then(actualPassword => {
+
+					bootstrap.Modal
+						.getInstance(
+							document.getElementById("masterPasswordModal")
+						).hide();
+
+					const input =
+						document.getElementById("pwd-" + selectedEntryId);
+
+					input.type = "text";
+					input.value = actualPassword;
+
+					setTimeout(() => {
+						input.type = "password";
+						input.value = "********";
+					}, 10000);
+				})
+				.catch(() => {
+					document.getElementById("masterPasswordError")
+						.classList.remove("d-none");
+				});
+		}
+
+		function toggleMasterPassword() {
+			const input =
+				document.getElementById("masterPasswordInput");
+			input.type =
+				input.type === "password" ? "text" : "password";
+		}
+
+		function copyPassword(id) {
+			const input =
+				document.getElementById("pwd-" + id);
+			navigator.clipboard.writeText(input.value)
+				.then(() => {
+					new bootstrap.Toast(
+						document.getElementById("copyToast"),
+						{delay: 2000}
+					).show();
+				});
+		}
+
+		function toggleFavorite(id) {
+			fetch('/vault/favorite/' + id, {method: 'POST'})
+				.then(res => {
+					if (!res.ok) throw new Error();
+					const icon =
+						document.querySelector('#fav-' + id + ' i');
+					icon.classList.toggle('bi-star');
+					icon.classList.toggle('bi-star-fill');
+					icon.classList.toggle('text-warning');
+					icon.classList.toggle('text-muted');
+				});
+		}
+
+		function requestOperationOtp(id, action) {
+
+			selectedId = id;
+			selectedAction = action;
+
+			fetch('/generate-operation-otp', {method: 'POST'})
+				.then(async res => {
+
+					if (!res.ok) {
+
+						const text = await res.text();
+
+						if (text === "ENABLE_2FA_REQUIRED") {
+
+							new bootstrap.Modal(
+								document.getElementById("twoFaRequiredModal")
+							).show();
+
+							return;
+						}
+
+						throw new Error("OTP generation failed");
+					}
+
+					return res.json();
+				})
+				.then(data => {
+
+					if (!data) return;
+
+					document.getElementById("generatedOtpText")
+						.innerText = data.code;
+
+					document.getElementById("operationOtpInput")
+						.value = "";
+
+					document.getElementById("operationOtpError")
+						.classList.add("d-none");
+
+					new bootstrap.Modal(
+						document.getElementById("operationOtpModal")
+					).show();
+				})
+				.catch(() => {
+					console.error("OTP request failed.");
+				});
+		}
+
+		function verifyOperationOtp() {
+			const otp =
+				document.getElementById("operationOtpInput").value;
+
+			fetch('/verify-operation-otp?otp=' + otp,
+				{method: 'POST'})
+				.then(res => {
+					if (!res.ok) throw new Error();
+
+					bootstrap.Modal
+						.getInstance(
+							document.getElementById("operationOtpModal")
+						).hide();
+
+					if (selectedAction === 'delete')
+						window.location.href =
+							'/vault/delete/' + selectedId;
+
+					if (selectedAction === 'edit')
+						window.location.href =
+							'/vault/edit/' + selectedId;
+				})
+				.catch(() => {
+					document.getElementById("operationOtpError")
+						.classList.remove("d-none");
+				});
+		}
+
+	</script>
+
+</section>
+
+</html>

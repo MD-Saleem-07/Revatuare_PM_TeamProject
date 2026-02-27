@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main :: layout(~{::section})}">
+
+<section>
+
+	<div class="mb-4">
+		<h2 class="fw-bold">Password Generator</h2>
+		<p class="text-muted">Generate secure and customizable passwords.</p>
+	</div>
+
+	<div class="row g-4">
+
+		<div class="col-md-6">
+			<div class="card shadow-sm border-0 p-4">
+
+				<h5 class="mb-3">Options</h5>
+
+				<div class="mb-3">
+					<label>Password Length</label>
+					<input type="number" id="length" class="form-control" value="12" min="8" max="64">
+				</div>
+
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" id="includeUpper" checked>
+					<label class="form-check-label">Uppercase Letters</label>
+				</div>
+
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" id="includeLower" checked>
+					<label class="form-check-label">Lowercase Letters</label>
+				</div>
+
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" id="includeNumbers" checked>
+					<label class="form-check-label">Numbers</label>
+				</div>
+
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" id="includeSpecial" checked>
+					<label class="form-check-label">Special Characters</label>
+				</div>
+
+				<div class="form-check mb-3">
+					<input class="form-check-input" type="checkbox" id="excludeSimilar">
+					<label class="form-check-label">
+						Exclude Similar Characters
+					</label>
+				</div>
+
+				<button type="button" onclick="generateSingle()" class="btn btn-primary w-100">
+					Generate Password
+				</button>
+
+			</div>
+		</div>
+
+		<div class="col-md-6">
+			<div class="card shadow-sm border-0 p-4">
+
+				<div id="successBox" class="alert alert-success d-none"></div>
+				<div id="errorBox" class="alert alert-danger d-none"></div>
+
+				<div class="input-group mb-2">
+					<input type="text" id="singleResult" class="form-control" readonly>
+
+					<button class="btn btn-outline-secondary" onclick="copySingle()">
+						Copy
+					</button>
+				</div>
+
+				<div class="mt-3">
+					<div class="d-flex justify-content-between mb-1">
+						<small>Password Strength</small>
+						<span id="strengthBadge" class="badge bg-secondary">—</span>
+					</div>
+
+					<div class="progress" style="height:6px;">
+						<div id="strengthBar" class="progress-bar" style="width:0%;">
+						</div>
+					</div>
+				</div>
+
+				<div class="mt-3 d-grid">
+					<button type="button" class="btn btn-success d-none" id="saveBtn" onclick="openSaveModal()">
+						Save to Vault
+					</button>
+				</div>
+
+				<hr>
+
+				<h6>Generate Multiple</h6>
+
+				<div class="input-group mb-3">
+					<input type="number" id="count" class="form-control" value="3" min="1" max="20">
+
+					<button type="button" onclick="generateMultiple()" class="btn btn-outline-primary">
+						Generate
+					</button>
+				</div>
+
+				<div id="multipleResults"></div>
+
+			</div>
+		</div>
+
+	</div>
+
+	<div class="modal fade" id="saveModal" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+
+				<div class="modal-header">
+					<h5 class="modal-title">Save Password to Vault</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+
+				<div class="modal-body">
+
+					<div class="mb-3">
+						<label>Account Name</label>
+						<input type="text" id="vaultAccount" class="form-control">
+					</div>
+
+					<div class="mb-3">
+						<label>Username / Email</label>
+						<input type="text" id="vaultUsername" class="form-control">
+					</div>
+
+					<div class="mb-3">
+						<label>Website URL</label>
+						<input type="text" id="vaultWebsite" class="form-control" placeholder="https://example.com">
+					</div>
+
+					<div class="mb-3">
+						<select id="vaultCategory" class="form-select">
+							<option value="">Select Category</option>
+							<option value="shopping">Shopping</option>
+							<option value="social">Social</option>
+							<option value="work">Work</option>
+							<option value="banking">Banking</option>
+							<option value="entertainment">Entertainment</option>
+							<option value="other">Other</option>
+						</select>
+					</div>
+
+				</div>
+
+				<div class="modal-footer">
+					<button class="btn btn-secondary" data-bs-dismiss="modal">
+						Cancel
+					</button>
+
+					<button class="btn btn-success" onclick="saveToVault()">
+						Save
+					</button>
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+	<script>
+
+		function buildRequest() {
+
+			const length = parseInt(document.getElementById("length").value);
+			const includeUpper = document.getElementById("includeUpper").checked;
+			const includeLower = document.getElementById("includeLower").checked;
+			const includeNumbers = document.getElementById("includeNumbers").checked;
+			const includeSpecial = document.getElementById("includeSpecial").checked;
+			const excludeSimilar = document.getElementById("excludeSimilar").checked;
+
+			if (length < 8 || length > 64) {
+				showError("Password length must be between 8 and 64 characters.");
+				return null;
+			}
+
+			if (!includeUpper && !includeLower && !includeNumbers && !includeSpecial) {
+				showError("Please select at least one character type.");
+				return null;
+			}
+
+			return {
+				length,
+				includeUpper,
+				includeLower,
+				includeNumbers,
+				includeSpecial,
+				excludeSimilar
+			};
+		}
+
+		function generateSingle() {
+
+			hideError();
+
+			const request = buildRequest();
+			if (!request) return;
+
+			fetch('/generator/generate', {
+				method: 'POST',
+				headers: {'Content-Type': 'application/json'},
+				body: JSON.stringify(request)
+			})
+				.then(res => {
+					if (!res.ok) throw new Error("Something went wrong.");
+					return res.text();
+				})
+				.then(password => {
+					document.getElementById("singleResult").value = password;
+					evaluateStrength(password);
+					document.getElementById("saveBtn").classList.remove("d-none");
+				})
+				.catch(err => showError(err.message));
+		}
+
+		function generateMultiple() {
+
+			hideError();
+
+			const request = buildRequest();
+			if (!request) return;
+
+			const count = document.getElementById("count").value;
+
+			fetch('/generator/generate-multiple?count=' + count, {
+				method: 'POST',
+				headers: {'Content-Type': 'application/json'},
+				body: JSON.stringify(request)
+			})
+				.then(res => {
+					if (!res.ok) throw new Error("Something went wrong.");
+					return res.json();
+				})
+				.then(passwords => {
+
+					const container = document.getElementById("multipleResults");
+					container.innerHTML = "";
+
+					passwords.forEach(pwd => {
+
+						const div = document.createElement("div");
+						div.className = "input-group mb-2";
+
+						div.innerHTML = `
+                            <input type="text"
+                                   class="form-control"
+                                   value="${pwd}"
+                                   readonly>
+                            <button class="btn btn-outline-secondary"
+                                    onclick="navigator.clipboard.writeText('${pwd}')">
+                                Copy
+                            </button>
+                        `;
+
+						container.appendChild(div);
+					});
+
+				})
+				.catch(err => showError(err.message));
+		}
+
+		function evaluateStrength(password) {
+
+			let score = 0;
+
+			if (password.length >= 8) score++;
+			if (password.length >= 12) score++;
+			if (/[A-Z]/.test(password)) score++;
+			if (/[a-z]/.test(password)) score++;
+			if (/[0-9]/.test(password)) score++;
+			if (/[^A-Za-z0-9]/.test(password)) score++;
+
+			const bar = document.getElementById("strengthBar");
+			const badge = document.getElementById("strengthBadge");
+
+			bar.style.width = (score / 6 * 100) + "%";
+			bar.className = "progress-bar";
+
+			if (score <= 2) {
+				bar.classList.add("bg-danger");
+				badge.className = "badge bg-danger";
+				badge.textContent = "Weak";
+			} else if (score <= 3) {
+				bar.classList.add("bg-warning");
+				badge.className = "badge bg-warning";
+				badge.textContent = "Medium";
+			} else if (score <= 4) {
+				bar.classList.add("bg-info");
+				badge.className = "badge bg-info";
+				badge.textContent = "Strong";
+			} else {
+				bar.classList.add("bg-success");
+				badge.className = "badge bg-success";
+				badge.textContent = "Very Strong";
+			}
+		}
+
+		function copySingle() {
+			navigator.clipboard.writeText(
+				document.getElementById("singleResult").value
+			);
+		}
+
+		function showError(msg) {
+			const box = document.getElementById("errorBox");
+			box.innerText = msg;
+			box.classList.remove("d-none");
+		}
+
+		function hideError() {
+			document.getElementById("errorBox").classList.add("d-none");
+		}
+
+		function openSaveModal() {
+			new bootstrap.Modal(
+				document.getElementById('saveModal')
+			).show();
+		}
+
+		function saveToVault() {
+
+			const accountName = document.getElementById("vaultAccount").value.trim();
+			const loginUsername = document.getElementById("vaultUsername").value.trim();
+			const websiteUrl = document.getElementById("vaultWebsite").value.trim();
+			const category = document.getElementById("vaultCategory").value.trim();
+			const password = document.getElementById("singleResult").value;
+
+			if (!accountName || !loginUsername || !websiteUrl) {
+				showError("Account, username and website are required.");
+				return;
+			}
+
+			fetch('/vault/add', {
+				method: 'POST',
+				credentials: 'same-origin',
+				headers: {'Content-Type': 'application/json'},
+				body: JSON.stringify({
+					accountName,
+					loginUsername,
+					password,
+					category,
+					websiteUrl
+				})
+			})
+				.then(res => {
+					if (!res.ok) throw new Error("Failed to save password.");
+					return res.text();
+				})
+				.then(() => {
+
+					document.getElementById("successBox").innerText =
+						"Password added successfully!";
+
+					document.getElementById("successBox")
+						.classList.remove("d-none");
+
+					bootstrap.Modal.getInstance(
+						document.getElementById('saveModal')
+					).hide();
+
+					setTimeout(() => {
+						document.getElementById("successBox")
+							.classList.add("d-none");
+					}, 3000);
+				})
+				.catch(err => showError(err.message));
+		}
+
+	</script>
+
+</section>
+
+</html>
