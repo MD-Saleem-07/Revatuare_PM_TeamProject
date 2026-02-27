@@ -3,69 +3,64 @@ package com.revature.pm.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-
 @Entity
 @Table(name = "password_entries")
 public class PasswordEntry {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Column(nullable = false)
-    private String accountName;
+	@Column(nullable = false)
+	private String accountName;
 
-    @Column(nullable = false)
-    private String websiteUrl;
+	@Column(nullable = false)
+	private String websiteUrl;
 
-    @Column(nullable = false)
-    private String loginUsername;
+	@Column(nullable = false)
+	private String loginUsername;
 
-    @Column(nullable = false)
-    private String encryptedPassword;   // Will store AES encrypted password
+	@Column(nullable = false)
+	private String encryptedPassword;
 
-    @Column
-    private String category;   // Social, Banking, Email, etc.
+	@Column
+	private String category;
 
-    @Column(length = 1000)
-    private String notes;
+	@Column(length = 1000)
+	private String notes;
 
-    @Column
-    private boolean favorite;
+	@Column
+	private boolean favorite;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
+	@Column(nullable = false)
+	private LocalDateTime createdAt;
 
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
+	@Column(nullable = false)
+	private LocalDateTime updatedAt;
 
-   
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+	@ManyToOne
+	@JoinColumn(name = "user_id", nullable = false)
+	private User user;
 
-    public PasswordEntry() {
-    }
+	public PasswordEntry() {
+		// used in service layer
+	}
 
-    public PasswordEntry(Long id, String accountName, String websiteUrl,
-                         String loginUsername, String encryptedPassword,
-                         String category, String notes,
-                         boolean favorite,
-                         LocalDateTime createdAt,
-                         LocalDateTime updatedAt,
-                         User user) {
-        this.id = id;
-        this.accountName = accountName;
-        this.websiteUrl = websiteUrl;
-        this.loginUsername = loginUsername;
-        this.encryptedPassword = encryptedPassword;
-        this.category = category;
-        this.notes = notes;
-        this.favorite = favorite;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.user = user;
-    }
+	public PasswordEntry(Long id, String accountName, String websiteUrl, String loginUsername, String encryptedPassword,
+			String category, String notes, boolean favorite, LocalDateTime createdAt, LocalDateTime updatedAt,
+			User user) {
+		this.id = id;
+		this.accountName = accountName;
+		this.websiteUrl = websiteUrl;
+		this.loginUsername = loginUsername;
+		this.encryptedPassword = encryptedPassword;
+		this.category = category;
+		this.notes = notes;
+		this.favorite = favorite;
+		this.createdAt = createdAt;
+		this.updatedAt = updatedAt;
+		this.user = user;
+	}
 
 	public Long getId() {
 		return id;
@@ -155,5 +150,4 @@ public class PasswordEntry {
 		this.user = user;
 	}
 
-    
 }

@@ -6,11 +6,10 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-//import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.revature.pm.dto.PasswordEntryDTO;
 import com.revature.pm.dto.VaultExportDTO;
 import com.revature.pm.entity.PasswordEntry;
@@ -20,138 +19,138 @@ import com.revature.pm.repository.PasswordEntryRepository;
 import com.revature.pm.repository.UserRepository;
 import com.revature.pm.service.VaultBackupService;
 import com.revature.pm.util.AESUtil;
-import tools.jackson.databind.ObjectMapper;
 
 @Service
+@Transactional
 public class VaultBackupServiceImpl implements VaultBackupService {
-	
-	@Autowired
-	private UserRepository userRepository;
 
-	@Autowired
-	private PasswordEntryRepository passwordEntryRepository;
+    private static final Logger logger =
+            LoggerFactory.getLogger(VaultBackupServiceImpl.class);
 
-	@Autowired
-	private ObjectMapper objectMapper;
+    private UserRepository userRepository;
+    private PasswordEntryRepository passwordEntryRepository;
+    private ObjectMapper objectMapper;
 
-	private static final Logger logger = LoggerFactory.getLogger(VaultBackupService.class);
-	
-	@Override
-	public String exportVault(Long userId) {
+    public VaultBackupServiceImpl(UserRepository userRepository,
+                                  PasswordEntryRepository passwordEntryRepository,
+                                  ObjectMapper objectMapper) {
+        this.userRepository = userRepository;
+        this.passwordEntryRepository = passwordEntryRepository;
+        this.objectMapper = objectMapper;
+    }
 
-		logger.info("Vault export requested for user {}", userId);
+    @Override
+    public String exportVault(Long userId) {
 
-		User user = userRepository.findById(userId).orElseThrow(() -> {
-			logger.error("Vault export failed - User not found: {}", userId);
-			return new ResourceNotFoundException("User not found");
-		});
+        logger.info("Vault export requested for user {}", userId);
 
-		List<PasswordEntry> entries = passwordEntryRepository.findByUser(user);
+        User user = userRepository.findById(userId).orElseThrow(() -> {
+            logger.error("Vault export failed - User not found: {}", userId);
+            return new ResourceNotFoundException("User not found");
+        });
 
-		logger.debug("Total entries to export for user {}: {}", userId, entries.size());
+        List<PasswordEntry> entries = passwordEntryRepository.findByUser(user);
 
-		List<PasswordEntryDTO> dtoList = entries.stream().map(entry -> {
+        logger.debug("Total entries to export for user {}: {}", userId, entries.size());
 
-			PasswordEntryDTO dto = new PasswordEntryDTO();
+        List<PasswordEntryDTO> dtoList = entries.stream().map(entry -> {
 
-			dto.setAccountName(entry.getAccountName());
-			dto.setWebsiteUrl(entry.getWebsiteUrl());
-			dto.setLoginUsername(entry.getLoginUsername());
+            PasswordEntryDTO dto = new PasswordEntryDTO();
+            dto.setAccountName(entry.getAccountName());
+            dto.setWebsiteUrl(entry.getWebsiteUrl());
+            dto.setLoginUsername(entry.getLoginUsername());
+            dto.setPassword(AESUtil.decrypt(entry.getEncryptedPassword()));
+            dto.setCategory(entry.getCategory());
+            dto.setNotes(entry.getNotes());
 
-			dto.setPassword(AESUtil.decrypt(entry.getEncryptedPassword()));
-			dto.setCategory(entry.getCategory());
-			dto.setNotes(entry.getNotes());
+            return dto;
 
-			return dto;
+        }).collect(Collectors.toList());
 
-		}).collect(Collectors.toList());
+        VaultExportDTO exportDTO = new VaultExportDTO();
+        exportDTO.setUsername(user.getUsername());
+        exportDTO.setPasswords(dtoList);
 
-		VaultExportDTO exportDTO = new VaultExportDTO();
-		exportDTO.setUsername(user.getUsername());
-		exportDTO.setPasswords(dtoList);
+        try {
 
-		try {
+            String json = objectMapper.writeValueAsString(exportDTO);
+            String encryptedBackup = AESUtil.encrypt(json);
 
-			String json = objectMapper.writeValueAsString(exportDTO);
+            logger.info("Vault export completed successfully for user {} ({} entries)",
+                    userId, entries.size());
 
-			String encryptedBackup = AESUtil.encrypt(json);
+            return encryptedBackup;
 
-			logger.info("Vault export completed successfully for user {} ({} entries)", userId, entries.size());
+        } catch (Exception e) {
 
-			return encryptedBackup;
+            logger.error("Vault export failed for user {} due to error", userId, e);
+            throw new RuntimeException("Error while exporting vault");
+        }
+    }
 
-		} catch (Exception e) {
+    @Override
+    public void importVault(Long userId, String encryptedBackup) {
 
-			logger.error("Vault export failed for user {} due to error", userId, e);
+        logger.info("Vault import requested for user {}", userId);
 
-			throw new RuntimeException("Error while exporting vault");
-		}
-	}
-	@Override
-	@Transactional
-	public void importVault(Long userId, String encryptedBackup) {
+        User user = userRepository.findById(userId).orElseThrow(() -> {
+            logger.error("Vault import failed - User not found: {}", userId);
+            return new ResourceNotFoundException("User not found");
+        });
 
-		logger.info("Vault import requested for user {}", userId);
+        try {
 
-		User user = userRepository.findById(userId).orElseThrow(() -> {
-			logger.error("Vault import failed - User not found: {}", userId);
-			return new ResourceNotFoundException("User not found");
-		});
+            String decryptedJson = AESUtil.decrypt(encryptedBackup);
 
-		try {
+            VaultExportDTO exportDTO =
+                    objectMapper.readValue(decryptedJson, VaultExportDTO.class);
 
-			String decryptedJson = AESUtil.decrypt(encryptedBackup);
+            int importCount = 0;
 
-			VaultExportDTO exportDTO = objectMapper.readValue(decryptedJson, VaultExportDTO.class);
+            for (PasswordEntryDTO dto : exportDTO.getPasswords()) {
 
-			int importCount = 0;
+                PasswordEntry entry = new PasswordEntry();
 
-			for (PasswordEntryDTO dto : exportDTO.getPasswords()) {
+                entry.setAccountName(dto.getAccountName());
+                entry.setWebsiteUrl(dto.getWebsiteUrl());
+                entry.setLoginUsername(dto.getLoginUsername());
+                entry.setEncryptedPassword(AESUtil.encrypt(dto.getPassword()));
+                entry.setCategory(dto.getCategory());
+                entry.setNotes(dto.getNotes());
+                entry.setFavorite(false);
+                entry.setCreatedAt(LocalDateTime.now());
+                entry.setUpdatedAt(LocalDateTime.now());
+                entry.setUser(user);
 
-				PasswordEntry entry = new PasswordEntry();
+                passwordEntryRepository.save(entry);
+                importCount++;
+            }
 
-				entry.setAccountName(dto.getAccountName());
-				entry.setWebsiteUrl(dto.getWebsiteUrl());
-				entry.setLoginUsername(dto.getLoginUsername());
+            logger.info("Vault import completed successfully for user {} ({} entries imported)",
+                    userId, importCount);
 
-				entry.setEncryptedPassword(AESUtil.encrypt(dto.getPassword()));
+        } catch (Exception e) {
 
-				entry.setCategory(dto.getCategory());
-				entry.setNotes(dto.getNotes());
-				entry.setFavorite(false);
-				entry.setCreatedAt(LocalDateTime.now());
-				entry.setUpdatedAt(LocalDateTime.now());
-				entry.setUser(user);
+            logger.error("Vault import failed for user {} due to error", userId, e);
+            throw new RuntimeException("Error while importing vault");
+        }
+    }
 
-				passwordEntryRepository.save(entry);
-				importCount++;
-			}
+    @Override
+    public String exportVaultByUsername(String username) {
 
-			logger.info("Vault import completed successfully for user {} ({} entries imported)", userId, importCount);
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-		} catch (Exception e) {
+        return exportVault(user.getId());
+    }
 
-			logger.error("Vault import failed for user {} due to error", userId, e);
+    @Override
+    public void importVaultByUsername(String username, String encryptedBackup) {
 
-			throw new RuntimeException("Error while importing vault");
-		}
-	}
-	@Override
-	public String exportVaultByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-		User user = userRepository.findByUsername(username)
-				.orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-		return exportVault(user.getId());
-	}
-
-	@Override
-	@Transactional
-	public void importVaultByUsername(String username, String encryptedBackup) {
-
-		User user = userRepository.findByUsername(username)
-				.orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-		importVault(user.getId(), encryptedBackup);
-	}
+        importVault(user.getId(), encryptedBackup);
+    }
 }

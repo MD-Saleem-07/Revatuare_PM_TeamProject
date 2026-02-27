@@ -2,6 +2,8 @@ package com.revature.pm.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+
 import com.revature.pm.dto.DashboardStatsDTO;
 import com.revature.pm.dto.PasswordEntryDTO;
 import com.revature.pm.dto.ViewPasswordDTO;
@@ -29,4 +31,6 @@ public interface PasswordEntryService {
     List<PasswordEntryDTO> sortPasswordsByUsername(String username, String sortBy);
 
     DashboardStatsDTO getDashboardStatsByUsername(String username);
+
+    Page<PasswordEntryDTO> getPasswordsPageByUsername(String username, int page, int size);
 }

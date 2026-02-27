@@ -5,7 +5,7 @@ import com.revature.pm.dto.PasswordEntryDTO;
 import com.revature.pm.dto.ViewPasswordDTO;
 import com.revature.pm.service.PasswordEntryService;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -16,8 +16,12 @@ import java.util.List;
 @RequestMapping("/api/vault")
 public class PasswordEntryRestController {
 
-	@Autowired
 	private PasswordEntryService passwordEntryService;
+
+	public PasswordEntryRestController(PasswordEntryService passwordEntryService) {
+
+		this.passwordEntryService = passwordEntryService;
+	}
 
 	// Add Password
 	@PostMapping
@@ -37,13 +41,15 @@ public class PasswordEntryRestController {
 		return ResponseEntity.ok(passwordEntryService.getDashboardStatsByUsername(username));
 	}
 
-	// get all pwd
 	@GetMapping
-	public ResponseEntity<List<PasswordEntryDTO>> getAllPasswords(Authentication authentication) {
+	public ResponseEntity<Page<PasswordEntryDTO>> getVaultPasswords(Authentication authentication,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
 
 		String username = authentication.getName();
 
-		return ResponseEntity.ok(passwordEntryService.getAllPasswordsByUsername(username));
+		Page<PasswordEntryDTO> passwordPage = passwordEntryService.getPasswordsPageByUsername(username, page, size);
+
+		return ResponseEntity.ok(passwordPage);
 	}
 
 	// Update Password

@@ -4,19 +4,20 @@ import java.time.LocalDateTime;
 
 public class PasswordEntryDTO {
 
-    private Long id;
-    private String accountName;
-    private String websiteUrl;
-    private String loginUsername;
-    private String password;   // decrypted version for display
-    private String category;
-    private String notes;
-    private boolean favorite;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+	private Long id;
+	private String accountName;
+	private String websiteUrl;
+	private String loginUsername;
+	private String password;
+	private String category;
+	private String notes;
+	private boolean favorite;
+	private LocalDateTime createdAt;
+	private LocalDateTime updatedAt;
 
-    public PasswordEntryDTO() {
-    }
+	public PasswordEntryDTO() {
+		// required for jackon deserialization
+	}
 
 	public Long getId() {
 		return id;
@@ -98,5 +99,4 @@ public class PasswordEntryDTO {
 		this.updatedAt = updatedAt;
 	}
 
-   
 }
