@@ -1,7 +1,6 @@
 package com.revature.pm.controller.rest;
 
 import com.revature.pm.service.VaultBackupService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -10,8 +9,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/backup")
 public class VaultBackupRestController {
 
-	@Autowired
 	private VaultBackupService vaultBackupService;
+
+	public VaultBackupRestController(VaultBackupService vaultBackupService) {
+		this.vaultBackupService = vaultBackupService;
+	}
 
 	@GetMapping("/export")
 	public ResponseEntity<String> exportVault(Authentication authentication) {
