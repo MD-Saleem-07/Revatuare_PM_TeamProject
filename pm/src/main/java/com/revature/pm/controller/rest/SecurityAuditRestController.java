@@ -3,7 +3,6 @@ package com.revature.pm.controller.rest;
 import com.revature.pm.dto.AuditReportDTO;
 import com.revature.pm.service.SecurityAuditService;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -12,8 +11,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/audit")
 public class SecurityAuditRestController {
 
-	@Autowired
 	private SecurityAuditService securityAuditService;
+
+	public SecurityAuditRestController(SecurityAuditService securityAuditService) {
+		this.securityAuditService = securityAuditService;
+	}
 
 	@GetMapping
 	public ResponseEntity<AuditReportDTO> generateAuditReport(Authentication authentication) {

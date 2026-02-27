@@ -62,7 +62,7 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
         AuditReportDTO report = new AuditReportDTO();
         report.setTotalPasswords(entries.size());
 
-        List<String> weakAccounts = new ArrayList<>();
+		List<String> weakAccounts = new ArrayList<>();
         List<String> reusedAccounts = new ArrayList<>();
         List<String> oldAccounts = new ArrayList<>();
 
