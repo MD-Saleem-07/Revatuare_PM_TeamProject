@@ -1,11 +1,11 @@
 package com.revature.pm.service.impl;
 
-import com.revature.pm.service.PasswordGeneratorService;
-import com.revature.pm.util.PasswordGeneratorUtil;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import com.revature.pm.service.PasswordGeneratorService;
+import com.revature.pm.util.PasswordGeneratorUtil;
 
 import java.util.ArrayList;
 import java.util.List;

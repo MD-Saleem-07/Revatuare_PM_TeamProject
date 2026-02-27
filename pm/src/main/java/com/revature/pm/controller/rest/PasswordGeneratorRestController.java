@@ -3,7 +3,6 @@ package com.revature.pm.controller.rest;
 import com.revature.pm.dto.PasswordGenerationRequestDTO;
 import com.revature.pm.service.PasswordGeneratorService;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,8 +12,11 @@ import java.util.List;
 @RequestMapping("/api/generator")
 public class PasswordGeneratorRestController {
 
-	@Autowired
 	private PasswordGeneratorService passwordGeneratorService;
+
+	public PasswordGeneratorRestController(PasswordGeneratorService passwordGeneratorService) {
+		this.passwordGeneratorService = passwordGeneratorService;
+	}
 
 	// Generate single password
 	@PostMapping("/generate")
