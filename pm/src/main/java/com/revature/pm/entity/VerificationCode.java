@@ -25,6 +25,7 @@ public class VerificationCode {
     private User user;
 
     public VerificationCode() {
+    	// used in Service Layer
     }
 
     public VerificationCode(Long id, String code,LocalDateTime expiryTime,boolean used,User user) {
