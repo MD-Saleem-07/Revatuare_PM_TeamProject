@@ -1,16 +1,21 @@
 package com.revature.pm.dto;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
 public class PasswordGenerationRequestDTO {
 
-    private int length;
-    private boolean includeUpper;
-    private boolean includeLower;
-    private boolean includeNumbers;
-    private boolean includeSpecial;
-    private boolean excludeSimilar;
+	@Min(value = 8, message = "Password length must be at least 8")
+	@Max(value = 64, message = "Password length cannot exceed 64")
+	private int length;
+	private boolean includeUpper;
+	private boolean includeLower;
+	private boolean includeNumbers;
+	private boolean includeSpecial;
+	private boolean excludeSimilar;
 
-    public PasswordGenerationRequestDTO() {
-    }
+	public PasswordGenerationRequestDTO() {
+	}
 
 	public int getLength() {
 		return length;
@@ -60,5 +65,4 @@ public class PasswordGenerationRequestDTO {
 		this.excludeSimilar = excludeSimilar;
 	}
 
-    
 }
