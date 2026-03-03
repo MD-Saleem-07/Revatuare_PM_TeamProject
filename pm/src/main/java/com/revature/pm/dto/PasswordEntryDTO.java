@@ -2,15 +2,35 @@ package com.revature.pm.dto;
 
 import java.time.LocalDateTime;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public class PasswordEntryDTO {
 
 	private Long id;
+
+	@NotBlank(message = "Account name is required")
+	@Size(max = 100, message = "Account name too long")
 	private String accountName;
+
+	@NotBlank(message = "Website URL is required")
+	@Size(max = 255, message = "Website URL too long")
 	private String websiteUrl;
+
+	@NotBlank(message = "Login username is required")
+	@Size(max = 100, message = "Login username too long")
 	private String loginUsername;
+
+	@NotBlank(message = "Password is required")
+	@Size(min = 8, max = 64, message = "Password must be at least 8 and below 64 characters")
 	private String password;
+
+	@Size(max = 50, message = "Category too long")
 	private String category;
+
+	@Size(max = 500, message = "Notes too long")
 	private String notes;
+
 	private boolean favorite;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
