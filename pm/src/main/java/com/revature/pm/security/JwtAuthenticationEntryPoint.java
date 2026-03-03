@@ -13,20 +13,18 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
-    @Override
-    public void commence(HttpServletRequest request,
-                         HttpServletResponse response,
-                         AuthenticationException authException)
-            throws IOException, ServletException {
+	@Override
+	public void commence(HttpServletRequest request, HttpServletResponse response,
+			AuthenticationException authException) throws IOException, ServletException {
 
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json");
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		response.setContentType("application/json");
 
-        response.getWriter().write("""
-            {
-              "error": "Unauthorized",
-              "message": "Invalid or expired token"
-            }
-        """);
-    }
+		response.getWriter().write("""
+				    {
+				      "error": "Unauthorized",
+				      "message": "Invalid or expired token"
+				    }
+				""");
+	}
 }

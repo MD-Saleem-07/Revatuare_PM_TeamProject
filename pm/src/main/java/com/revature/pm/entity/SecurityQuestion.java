@@ -21,6 +21,7 @@ public class SecurityQuestion {
     private User user;
 
     public SecurityQuestion() {
+    	// used in Service Layer
     }
 
     public SecurityQuestion(Long id, String question, String encryptedAnswer, User user) {

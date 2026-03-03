@@ -1,63 +1,51 @@
 package com.revature.pm.service.impl;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.revature.pm.dto.ChangePasswordDTO;
-import com.revature.pm.dto.LoginDTO;
-import com.revature.pm.dto.LoginResponseDTO;
-import com.revature.pm.dto.PasswordRecoveryDTO;
-import com.revature.pm.dto.RegistrationDTO;
-import com.revature.pm.dto.SecurityQuestionDTO;
-import com.revature.pm.entity.SecurityQuestion;
-import com.revature.pm.entity.User;
-import com.revature.pm.entity.VerificationCode;
-import com.revature.pm.exception.InvalidOperationException;
-import com.revature.pm.exception.ResourceAlreadyExistsException;
-import com.revature.pm.exception.ResourceNotFoundException;
-import com.revature.pm.repository.SecurityQuestionRepository;
-import com.revature.pm.repository.UserRepository;
-import com.revature.pm.repository.VerificationCodeRepository;
+import com.revature.pm.dto.*;
+import com.revature.pm.entity.*;
+import com.revature.pm.exception.*;
+import com.revature.pm.repository.*;
 import com.revature.pm.security.JwtUtil;
 import com.revature.pm.service.AuthService;
 
-import jakarta.transaction.Transactional;
-
 @Service
+@Transactional
 public class AuthServiceImpl implements AuthService {
-	
-	@Autowired
-	private UserRepository userRepository;
 
-	@Autowired
-	private SecurityQuestionRepository securityQuestionRepository;
-
-	@Autowired
-	private BCryptPasswordEncoder passwordEncoder;
-
-	@Autowired
-	private VerificationCodeRepository verificationCodeRepository;
-
-	@Autowired
-	private JwtUtil jwtUtil;
+	private static final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
 	private static final List<String> PREDEFINED_QUESTIONS = List.of("What is your first pet name?",
 			"What is your mother name?", "What was your first school name?", "What is your favorite movie?",
 			"What city were you born in?");
-	private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
+
+	private UserRepository userRepository;
+	private SecurityQuestionRepository securityQuestionRepository;
+	private BCryptPasswordEncoder passwordEncoder;
+	private VerificationCodeRepository verificationCodeRepository;
+	private JwtUtil jwtUtil;
+
+	public AuthServiceImpl(UserRepository userRepository, SecurityQuestionRepository securityQuestionRepository,
+			BCryptPasswordEncoder passwordEncoder, VerificationCodeRepository verificationCodeRepository,
+			JwtUtil jwtUtil) {
+		this.userRepository = userRepository;
+		this.securityQuestionRepository = securityQuestionRepository;
+		this.passwordEncoder = passwordEncoder;
+		this.verificationCodeRepository = verificationCodeRepository;
+		this.jwtUtil = jwtUtil;
+	}
 
 	public List<String> getPredefinedQuestions() {
 		return PREDEFINED_QUESTIONS;
 	}
-	@Override
+
 	@Transactional
 	public void registerUser(RegistrationDTO registrationDTO) {
 
@@ -104,11 +92,24 @@ public class AuthServiceImpl implements AuthService {
 
 		logger.info("User registered successfully with ID: {}", savedUser.getId());
 
+		Set<String> uniqueQuestions = new HashSet<>();
+
 		for (SecurityQuestionDTO dto : registrationDTO.getSecurityQuestions()) {
 
 			if (!PREDEFINED_QUESTIONS.contains(dto.getQuestion())) {
 				throw new InvalidOperationException("Invalid security question selected");
 			}
+
+			uniqueQuestions.add(dto.getQuestion());
+		}
+
+		// checks duplicates exist
+		if (uniqueQuestions.size() < 3) {
+			throw new InvalidOperationException("Security questions must be unique");
+		}
+
+		// Save questions (only after validation passed)
+		for (SecurityQuestionDTO dto : registrationDTO.getSecurityQuestions()) {
 
 			SecurityQuestion question = new SecurityQuestion();
 			question.setQuestion(dto.getQuestion());
@@ -122,7 +123,6 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 //login method
-	@Override
 	public LoginResponseDTO login(LoginDTO loginDTO) {
 
 		Optional<User> optionalUser;
@@ -157,7 +157,6 @@ public class AuthServiceImpl implements AuthService {
 		return new LoginResponseDTO("SUCCESS", token);
 	}
 
-	@Override
 	public void enableTwoFactor(Long userId) {
 
 		logger.info("Enabling 2FA for user ID: {}", userId);
@@ -173,7 +172,6 @@ public class AuthServiceImpl implements AuthService {
 		logger.info("2FA enabled successfully for user ID: {}", userId);
 	}
 
-	@Override
 	public void disableTwoFactor(Long userId) {
 
 		logger.info("Disabling 2FA for user ID: {}", userId);
@@ -189,7 +187,6 @@ public class AuthServiceImpl implements AuthService {
 		logger.info("2FA disabled successfully for user ID: {}", userId);
 	}
 
-	
 	public String generateVerificationCode(User user) {
 
 		logger.info("Generating verification code for user: {}", user.getUsername());
@@ -205,21 +202,21 @@ public class AuthServiceImpl implements AuthService {
 
 		VerificationCode verificationCode = new VerificationCode();
 		verificationCode.setCode(code);
-		verificationCode.setExpiryTime(LocalDateTime.now().plusMinutes(5));
+		verificationCode.setExpiryTime(LocalDateTime.now().plusSeconds(90));
 		verificationCode.setUsed(false);
 		verificationCode.setUser(user);
 
 		verificationCodeRepository.save(verificationCode);
 
 		logger.info("Verification code generated successfully for user: {}", user.getUsername());
-		logger.info("================================");
-		logger.info("OTP for user {} is {}", user.getUsername(), code);
-		logger.info("================================");
 
 		return code;
 	}
 
-	@Override
+	public String generateOperationOtp(User user) {
+		return generateVerificationCode(user);
+	}
+
 	@Transactional
 	public void verifyCode(String username, String inputCode) {
 
@@ -247,7 +244,6 @@ public class AuthServiceImpl implements AuthService {
 		logger.info("OTP verified successfully for user: {}", username);
 	}
 
-	@Override
 	@Transactional
 	public void changeMasterPassword(Long userId, ChangePasswordDTO dto) {
 
@@ -279,7 +275,6 @@ public class AuthServiceImpl implements AuthService {
 		logger.info("Master password changed successfully for user ID: {}", userId);
 	}
 
-	@Override
 	public List<String> getUserSecurityQuestions(String usernameOrEmail) {
 
 		User user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
@@ -288,7 +283,6 @@ public class AuthServiceImpl implements AuthService {
 		return user.getSecurityQuestions().stream().map(SecurityQuestion::getQuestion).toList();
 	}
 
-	@Override
 	@Transactional
 	public void recoverMasterPassword(PasswordRecoveryDTO dto) {
 
@@ -350,7 +344,6 @@ public class AuthServiceImpl implements AuthService {
 		logger.info("Password recovered successfully for user: {}", user.getUsername());
 	}
 
-	@Override
 	public void enableTwoFactorByUsername(String username) {
 
 		User user = userRepository.findByUsername(username)
@@ -359,7 +352,6 @@ public class AuthServiceImpl implements AuthService {
 		enableTwoFactor(user.getId());
 	}
 
-	@Override
 	public void disableTwoFactorByUsername(String username) {
 
 		User user = userRepository.findByUsername(username)
@@ -368,7 +360,7 @@ public class AuthServiceImpl implements AuthService {
 		disableTwoFactor(user.getId());
 	}
 
-	@Override
+	@Transactional
 	public void changeMasterPasswordByUsername(String username, ChangePasswordDTO dto) {
 
 		User user = userRepository.findByUsername(username)
@@ -376,6 +368,4 @@ public class AuthServiceImpl implements AuthService {
 
 		changeMasterPassword(user.getId(), dto);
 	}
-
-    
 }

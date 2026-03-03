@@ -1,6 +1,5 @@
 package com.revature.pm.controller.rest;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -15,8 +14,11 @@ import com.revature.pm.service.AuthService;
 @RequestMapping("/api/settings")
 public class SettingsRestController {
 
-	@Autowired
 	private AuthService authService;
+
+	public SettingsRestController(AuthService authService) {
+		this.authService = authService;
+	}
 
 	@PutMapping("/2fa/enable")
 	public ResponseEntity<String> enable2FA(Authentication authentication) {

@@ -2,31 +2,40 @@ package com.revature.pm.service;
 
 import java.util.List;
 
-import com.revature.pm.dto.*;
+import com.revature.pm.dto.ChangePasswordDTO;
+import com.revature.pm.dto.LoginDTO;
+import com.revature.pm.dto.LoginResponseDTO;
+import com.revature.pm.dto.PasswordRecoveryDTO;
+import com.revature.pm.dto.RegistrationDTO;
+import com.revature.pm.entity.User;
 
 public interface AuthService {
 
-    List<String> getPredefinedQuestions();
+	List<String> getPredefinedQuestions();
 
-    void registerUser(RegistrationDTO registrationDTO);
+	void registerUser(RegistrationDTO registrationDTO);
 
-    LoginResponseDTO login(LoginDTO loginDTO);
+	LoginResponseDTO login(LoginDTO loginDTO);
 
-    void enableTwoFactor(Long userId);
+	void enableTwoFactor(Long userId);
 
-    void disableTwoFactor(Long userId);
+	void disableTwoFactor(Long userId);
 
-    void verifyCode(String username, String inputCode);
+	String generateVerificationCode(User user);
 
-    void changeMasterPassword(Long userId, ChangePasswordDTO dto);
+	String generateOperationOtp(User user);
 
-    List<String> getUserSecurityQuestions(String usernameOrEmail);
+	void verifyCode(String username, String inputCode);
 
-    void recoverMasterPassword(PasswordRecoveryDTO dto);
+	void changeMasterPassword(Long userId, ChangePasswordDTO dto);
 
-    void enableTwoFactorByUsername(String username);
+	List<String> getUserSecurityQuestions(String usernameOrEmail);
 
-    void disableTwoFactorByUsername(String username);
+	void recoverMasterPassword(PasswordRecoveryDTO dto);
 
-    void changeMasterPasswordByUsername(String username, ChangePasswordDTO dto);
+	void enableTwoFactorByUsername(String username);
+
+	void disableTwoFactorByUsername(String username);
+
+	void changeMasterPasswordByUsername(String username, ChangePasswordDTO dto);
 }
