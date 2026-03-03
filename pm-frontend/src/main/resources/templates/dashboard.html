@@ -19,28 +19,28 @@
 	<div class="row g-4 mb-5">
 
 		<div class="col-md-3">
-			<div class="card text-center p-4 bg-primary text-white h-100">
+			<div class="card text-center p-4 bg-info bg-opacity-50 text-dark h-100">
 				<h6 class="text-uppercase small mb-2">Total Passwords</h6>
 				<h2 class="fw-bold" th:text="${stats.totalPasswords}">0</h2>
 			</div>
 		</div>
 
 		<div class="col-md-3">
-			<div class="card text-center p-4 bg-danger text-white h-100">
+			<div class="card text-center p-4 bg-danger bg-opacity-50 text-dark h-100">
 				<h6 class="text-uppercase small mb-2">Weak Passwords</h6>
 				<h2 class="fw-bold" th:text="${stats.weakPasswords}">0</h2>
 			</div>
 		</div>
 
 		<div class="col-md-3">
-			<div class="card text-center p-4 bg-warning text-dark h-100">
+			<div class="card text-center p-4 bg-warning bg-opacity-50 text-dark h-100">
 				<h6 class="text-uppercase small mb-2">Reused Passwords</h6>
 				<h2 class="fw-bold" th:text="${stats.reusedPasswords}">0</h2>
 			</div>
 		</div>
 
 		<div class="col-md-3">
-			<div class="card text-center p-4 bg-success text-white h-100">
+			<div class="card text-center p-4 bg-success bg-opacity-50 text-dark h-100">
 				<h6 class="text-uppercase small mb-2">Strong Passwords</h6>
 				<h2 class="fw-bold" th:text="${stats.strongPasswords}">0</h2>
 			</div>

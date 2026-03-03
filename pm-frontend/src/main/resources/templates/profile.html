@@ -50,28 +50,34 @@
 
 				<hr>
 
-				<form method="post" action="/profile/update">
+				<form method="post" action="/profile/update" novalidate id="profileForm">
 
 					<div class="mb-3">
 						<label class="form-label fw-semibold">
 							Username
 						</label>
-						<input type="text" class="form-control" th:value="${profile.username}" readonly>
+
+						<div class="profile-username-display" th:text="${profile.username}">
+							username
+						</div>
 					</div>
 
 					<div class="mb-3">
 						<label class="form-label fw-semibold">
 							Email Address
 						</label>
-						<input type="email" name="email" class="form-control" th:value="${profile.email}" required>
+						<input type="email" id="email" name="email" class="form-control" th:value="${profile.email}">
+
+						<div class="text-danger small" id="emailError"></div>
 					</div>
 
 					<div class="mb-3">
 						<label class="form-label fw-semibold">
 							Phone Number
 						</label>
-						<input type="text" name="phoneNumber" pattern="[0-9]{10}" title="phone number must be 10 digits"
-							class="form-control" th:value="${profile.phoneNumber}">
+						<input type="text" id="phoneNumber" name="phoneNumber" class="form-control"
+							th:value="${profile.phoneNumber}">
+						<div class="text-danger small" id="phoneError"></div>
 					</div>
 
 					<button class="btn btn-primary w-100">
@@ -141,6 +147,67 @@
 		</div>
 
 	</div>
+
+	<script>
+		document.getElementById("profileForm")
+			.addEventListener("submit", function (e) {
+
+				let valid = true;
+
+				// Clear previous errors
+				document.getElementById("emailError").innerText = "";
+				document.getElementById("phoneError").innerText = "";
+
+				const email = document.getElementById("email");
+				const phone = document.getElementById("phoneNumber");
+
+				// Email validation
+				if (email.value.trim() === "") {
+
+					document.getElementById("emailError").innerText =
+						"Email is required.";
+
+					email.classList.add("is-invalid");
+					valid = false;
+
+				} else if (!/^[a-zA-Z0-9._%+-]+@gmail\.[a-zA-Z]{2,3}$/.test(email.value.trim())) {
+
+					document.getElementById("emailError").innerText =
+						"Email must be in format: example@gmail.xx (2 to 3 letters only after gmail.)";
+
+					email.classList.add("is-invalid");
+					valid = false;
+
+				} else {
+
+					document.getElementById("emailError").innerText = "";
+					email.classList.remove("is-invalid");
+				}
+				// Phone validation
+				if (phone.value.trim() === "") {
+
+					document.getElementById("phoneError").innerText =
+						"Phone number is required.";
+					phone.classList.add("is-invalid");
+					valid = false;
+
+				} else if (!/^[6-9][0-9]{9}$/.test(phone.value.trim())) {
+
+					document.getElementById("phoneError").innerText =
+						"Phone number must be 10 digits and start with 6, 7, 8, or 9.";
+					phone.classList.add("is-invalid");
+					valid = false;
+
+				} else {
+					phone.classList.remove("is-invalid");
+				}
+
+				if (!valid) {
+					e.preventDefault();
+				}
+
+			});
+	</script>
 
 </section>
 

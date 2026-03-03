@@ -1,8 +1,13 @@
 package com.revature.pm.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class SecurityQuestionRequest {
 
+	@NotBlank(message = "Security question is required")
 	private String question;
+
+	@NotBlank(message = "Answer is required")
 	private String answer;
 
 	public String getQuestion() {

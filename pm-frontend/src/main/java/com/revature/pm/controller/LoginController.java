@@ -1,11 +1,19 @@
 package com.revature.pm.controller;
 
-
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
+import tools.jackson.databind.ObjectMapper;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -13,6 +21,7 @@ import com.revature.pm.dto.LoginRequest;
 import com.revature.pm.dto.LoginResponseDTO;
 import com.revature.pm.dto.PasswordRecoveryRequest;
 import com.revature.pm.dto.RegistrationRequest;
+import com.revature.pm.dto.SecurityQuestionRequest;
 import com.revature.pm.dto.VerificationCodeDTO;
 
 @Controller
@@ -33,7 +42,12 @@ public class LoginController {
 	}
 
 	@PostMapping("/login")
-	public String handleLogin(@ModelAttribute LoginRequest request, HttpSession session) {
+	public String handleLogin(@Valid @ModelAttribute("loginRequest") LoginRequest request, BindingResult bindingResult,
+			HttpSession session, Model model) {
+
+		if (bindingResult.hasErrors()) {
+			return "auth/login";
+		}
 
 		try {
 
@@ -160,12 +174,36 @@ public class LoginController {
 	}
 
 	@GetMapping("/register")
-	public String registerPage() {
+	public String registerPage(Model model) {
+
+		RegistrationRequest request = new RegistrationRequest();
+
+		List<SecurityQuestionRequest> questions = new ArrayList<>();
+		for (int i = 0; i < 3; i++) {
+			questions.add(new SecurityQuestionRequest());
+		}
+
+		request.setSecurityQuestions(questions);
+		model.addAttribute("registrationRequest", request);
+
 		return "auth/register";
 	}
 
 	@PostMapping("/register")
-	public String handleRegister(@ModelAttribute RegistrationRequest request) {
+	public String handleRegister(@Valid @ModelAttribute("registrationRequest") RegistrationRequest request,
+			BindingResult bindingResult, Model model) {
+
+		if (request.getSecurityQuestions() == null) {
+			request.setSecurityQuestions(new ArrayList<>());
+		}
+
+		while (request.getSecurityQuestions().size() < 3) {
+			request.getSecurityQuestions().add(new SecurityQuestionRequest());
+		}
+
+		if (bindingResult.hasErrors()) {
+			return "auth/register";
+		}
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
@@ -173,13 +211,21 @@ public class LoginController {
 		HttpEntity<RegistrationRequest> entity = new HttpEntity<>(request, headers);
 
 		try {
-
 			restTemplate.exchange(BACKEND_REGISTER_URL, HttpMethod.POST, entity, String.class);
-
 			return "redirect:/login?registered=true";
 
-		} catch (Exception e) {
-			return "redirect:/register?error=true";
+		} catch (HttpClientErrorException ex) {
+			ObjectMapper mapper = new ObjectMapper();
+
+			try {
+				Map<String, String> errors = mapper.readValue(ex.getResponseBodyAsString(), Map.class);
+
+				model.addAttribute("fieldErrors", errors);
+
+			} catch (Exception e) {
+				model.addAttribute("errorMessage", "Registration failed.");
+			}
+			return "auth/register";
 		}
 	}
 
