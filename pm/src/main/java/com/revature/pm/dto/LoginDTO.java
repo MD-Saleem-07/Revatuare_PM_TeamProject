@@ -1,31 +1,38 @@
 package com.revature.pm.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public class LoginDTO {
 
-    private String usernameOrEmail;
-    private String masterPassword;
+	@NotBlank(message = "Username or Email is required")
+	private String usernameOrEmail;
 
-    public LoginDTO() {
-    }
+	@NotBlank(message = "Password is required")
+	@Size(min = 8, max = 15, message = "Password must be at least 8 and below 15 characters")
+	private String masterPassword;
 
-    public LoginDTO(String usernameOrEmail, String masterPassword) {
-        this.usernameOrEmail = usernameOrEmail;
-        this.masterPassword = masterPassword;
-    }
+	public LoginDTO() {
+	}
 
-    public String getUsernameOrEmail() {
-        return usernameOrEmail;
-    }
+	public LoginDTO(String usernameOrEmail, String masterPassword) {
+		this.usernameOrEmail = usernameOrEmail;
+		this.masterPassword = masterPassword;
+	}
 
-    public void setUsernameOrEmail(String usernameOrEmail) {
-        this.usernameOrEmail = usernameOrEmail;
-    }
+	public String getUsernameOrEmail() {
+		return usernameOrEmail;
+	}
 
-    public String getMasterPassword() {
-        return masterPassword;
-    }
+	public void setUsernameOrEmail(String usernameOrEmail) {
+		this.usernameOrEmail = usernameOrEmail;
+	}
 
-    public void setMasterPassword(String masterPassword) {
-        this.masterPassword = masterPassword;
-    }
+	public String getMasterPassword() {
+		return masterPassword;
+	}
+
+	public void setMasterPassword(String masterPassword) {
+		this.masterPassword = masterPassword;
+	}
 }
