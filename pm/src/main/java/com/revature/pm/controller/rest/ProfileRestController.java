@@ -34,7 +34,7 @@ public class ProfileRestController {
 		User user = userRepository.findByUsername(username)
 				.orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-		UserProfileDTO dto = new UserProfileDTO();	
+		UserProfileDTO dto = new UserProfileDTO();
 		dto.setUsername(user.getUsername());
 		dto.setEmail(user.getEmail());
 		dto.setPhoneNumber(user.getPhoneNumber());
