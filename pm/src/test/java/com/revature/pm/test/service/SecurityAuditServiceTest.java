@@ -7,10 +7,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.revature.pm.dto.AuditReportDTO;
 import com.revature.pm.entity.PasswordEntry;
@@ -18,87 +17,109 @@ import com.revature.pm.entity.User;
 import com.revature.pm.exception.ResourceNotFoundException;
 import com.revature.pm.repository.PasswordEntryRepository;
 import com.revature.pm.repository.UserRepository;
-import com.revature.pm.service.SecurityAuditService;
+import com.revature.pm.service.impl.SecurityAuditServiceImpl;
 import com.revature.pm.util.AESUtil;
-import com.revature.pm.util.PasswordGeneratorUtil;
 
-@ExtendWith(MockitoExtension.class)
-class SecurityAuditServiceTest {
-
-	@InjectMocks
-	private SecurityAuditService service;
+class SecurityAuditServiceImplTest {
 
 	@Mock
 	private UserRepository userRepository;
-
 	@Mock
 	private PasswordEntryRepository passwordEntryRepository;
 
-	@Test
-	void generateAuditReportByUsername_userNotFound() {
-		when(userRepository.findByUsername("venkat")).thenReturn(Optional.empty());
+	@InjectMocks
+	private SecurityAuditServiceImpl auditService;
 
-		assertThrows(ResourceNotFoundException.class, () -> service.generateAuditReportByUsername("venkat"));
+	private User user;
+
+	@BeforeEach
+	void setup() {
+		MockitoAnnotations.openMocks(this);
+
+		user = new User();
+		user.setId(1L);
+		user.setUsername("venkat");
 	}
 
 	@Test
 	void generateAuditReport_userNotFound() {
+
 		when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
-		assertThrows(ResourceNotFoundException.class, () -> service.generateAuditReport(1L));
+		assertThrows(ResourceNotFoundException.class, () -> auditService.generateAuditReport(1L));
 	}
 
 	@Test
-	void generateAuditReport_success_allScenarios() {
+	void generateAuditReportByUsername_userNotFound() {
 
-		User user = new User();
-		user.setId(1L);
-		user.setUsername("venkat");
+		when(userRepository.findByUsername("testuser")).thenReturn(Optional.empty());
 
-		PasswordEntry e1 = new PasswordEntry();
-		e1.setAccountName("gmail");
-		e1.setEncryptedPassword("enc1");
-		e1.setUpdatedAt(LocalDateTime.now().minusDays(100));
-		e1.setUser(user);
+		assertThrows(ResourceNotFoundException.class, () -> auditService.generateAuditReportByUsername("venkat"));
+	}
 
-		PasswordEntry e2 = new PasswordEntry();
-		e2.setAccountName("facebook");
-		e2.setEncryptedPassword("enc2");
-		e2.setUpdatedAt(LocalDateTime.now());
-		e2.setUser(user);
-
-		PasswordEntry e3 = new PasswordEntry();
-		e3.setAccountName("twitter");
-		e3.setEncryptedPassword("enc2");
-		e3.setUpdatedAt(LocalDateTime.now());
-		e3.setUser(user);
+	@Test
+	void generateAuditReport_success_withWeakReusedOld() {
 
 		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-		when(passwordEntryRepository.findByUser(user)).thenReturn(List.of(e1, e2, e3));
 
-		try (MockedStatic<AESUtil> aesMock = mockStatic(AESUtil.class);
-				MockedStatic<PasswordGeneratorUtil> strengthMock = mockStatic(PasswordGeneratorUtil.class)) {
+		PasswordEntry entry1 = new PasswordEntry();
+		entry1.setAccountName("Google");
+		entry1.setEncryptedPassword(AESUtil.encrypt("12345"));
+		entry1.setUpdatedAt(LocalDateTime.now().minusDays(120));
+		entry1.setUser(user);
 
-			aesMock.when(() -> AESUtil.decrypt("enc1")).thenReturn("weakPass");
-			aesMock.when(() -> AESUtil.decrypt("enc2")).thenReturn("strongPass");
+		PasswordEntry entry2 = new PasswordEntry();
+		entry2.setAccountName("Facebook");
+		entry2.setEncryptedPassword(AESUtil.encrypt("12345"));
+		entry2.setUpdatedAt(LocalDateTime.now());
+		entry2.setUser(user);
 
-			strengthMock.when(() -> PasswordGeneratorUtil.checkStrength("weakPass")).thenReturn("Weak");
+		when(passwordEntryRepository.findByUser(user)).thenReturn(List.of(entry1, entry2));
 
-			strengthMock.when(() -> PasswordGeneratorUtil.checkStrength("strongPass")).thenReturn("Strong");
+		AuditReportDTO report = auditService.generateAuditReport(1L);
 
-			AuditReportDTO report = service.generateAuditReport(1L);
+		assertEquals(2, report.getTotalPasswords());
+		assertEquals(2, report.getWeakPasswords());
+		assertEquals(2, report.getReusedPasswords());
+		assertEquals(1, report.getOldPasswords());
 
-			assertEquals(3, report.getTotalPasswords());
+		assertTrue(report.getWeakPasswordAccounts().contains("Google"));
+		assertTrue(report.getReusedPasswordAccounts().contains("Facebook"));
+		assertTrue(report.getOldPasswordAccounts().contains("Google"));
+	}
 
-			assertEquals(1, report.getWeakPasswords());
-			assertTrue(report.getWeakPasswordAccounts().contains("gmail"));
+	@Test
+	void generateAuditReport_noIssues() {
 
-			assertEquals(2, report.getReusedPasswords());
-			assertTrue(report.getReusedPasswordAccounts().contains("facebook"));
-			assertTrue(report.getReusedPasswordAccounts().contains("twitter"));
+		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-			assertEquals(1, report.getOldPasswords());
-			assertTrue(report.getOldPasswordAccounts().contains("gmail"));
-		}
+		PasswordEntry entry = new PasswordEntry();
+		entry.setAccountName("SecureApp");
+		entry.setEncryptedPassword(AESUtil.encrypt("Abc@12345XYZ!"));
+		entry.setUpdatedAt(LocalDateTime.now());
+		entry.setUser(user);
+
+		when(passwordEntryRepository.findByUser(user)).thenReturn(List.of(entry));
+
+		AuditReportDTO report = auditService.generateAuditReport(1L);
+
+		assertEquals(1, report.getTotalPasswords());
+		assertEquals(0, report.getWeakPasswords());
+		assertEquals(0, report.getReusedPasswords());
+		assertEquals(0, report.getOldPasswords());
+	}
+
+	@Test
+	void generateAuditReportByUsername_success() {
+
+		when(userRepository.findByUsername("venkat")).thenReturn(Optional.of(user));
+
+		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+		when(passwordEntryRepository.findByUser(user)).thenReturn(List.of());
+
+		AuditReportDTO report = auditService.generateAuditReportByUsername("venkat");
+
+		assertEquals(0, report.getTotalPasswords());
 	}
 }

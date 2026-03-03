@@ -9,7 +9,7 @@ public class UpdateProfileDTO {
 	@NotBlank(message = "Email is required")
 	@Email(message = "Invalid email format")
 	private String email;
-	@Pattern(regexp = "^[0-9]{10}$", message = "Phone number must be 10 digits")
+	@Pattern(regexp = "^[6-9]\\d{9}$", message = "Phone number must be 10 digits and start with 6, 7, 8, or 9")
 	private String phoneNumber;
 
 	public UpdateProfileDTO() {

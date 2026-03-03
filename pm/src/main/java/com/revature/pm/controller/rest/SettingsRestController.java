@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.revature.pm.dto.ChangePasswordDTO;
 import com.revature.pm.service.AuthService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/settings")
 public class SettingsRestController {
@@ -37,7 +39,8 @@ public class SettingsRestController {
 	}
 
 	@PutMapping("/change-password")
-	public ResponseEntity<String> changePassword(Authentication authentication, @RequestBody ChangePasswordDTO dto) {
+	public ResponseEntity<String> changePassword(Authentication authentication,
+			@Valid @RequestBody ChangePasswordDTO dto) {
 
 		authService.changeMasterPasswordByUsername(authentication.getName(), dto);
 
