@@ -87,30 +87,33 @@
 					Change Master Password
 				</h5>
 
-				<form method="post" action="/settings/change-password">
+				<form method="post" action="/settings/change-password" novalidate id="changePasswordForm">
 
 					<div class="mb-3">
 						<label class="form-label fw-semibold">
 							Current Password
 						</label>
-						<input type="password" name="currentPassword" class="form-control" required>
+						<input type="password" id="currentPassword" name="currentPassword" class="form-control">
+						<div class="text-danger small" id="currentPasswordError"></div>
 					</div>
 
 					<div class="mb-3">
 						<label class="form-label fw-semibold">
 							New Password
 						</label>
-						<input type="password" name="newPassword" class="form-control" required>
+						<input type="password" id="newPassword" name="newPassword" class="form-control">
+						<div class="text-danger small" id="newPasswordError"></div>
 					</div>
 
 					<div class="mb-4">
 						<label class="form-label fw-semibold">
 							Confirm New Password
 						</label>
-						<input type="password" name="confirmPassword" class="form-control" required>
+						<input type="password" id="confirmPassword" name="confirmPassword" class="form-control">
+						<div class="text-danger small" id="confirmPasswordError"></div>
 					</div>
 
-					<button class="btn btn-primary w-100">
+					<button type="submit" class="btn btn-primary w-100">
 						<i class="bi bi-arrow-repeat me-1"></i>
 						Update Master Password
 					</button>
@@ -130,5 +133,78 @@
 	</div>
 
 </section>
+
+<script>
+
+	document.addEventListener("DOMContentLoaded", function () {
+
+		const form = document.getElementById("changePasswordForm");
+		const backendAlert = document.querySelector(".alert-danger");
+		if (backendAlert) backendAlert.style.display = "none";
+
+
+		form.addEventListener("submit", function (e) {
+
+			let valid = true;
+
+			const currentPassword = document.getElementById("currentPassword");
+			const newPassword = document.getElementById("newPassword");
+			const confirmPassword = document.getElementById("confirmPassword");
+
+			// Clear old errors
+			document.getElementById("currentPasswordError").innerText = "";
+			document.getElementById("newPasswordError").innerText = "";
+			document.getElementById("confirmPasswordError").innerText = "";
+
+			currentPassword.classList.remove("is-invalid");
+			newPassword.classList.remove("is-invalid");
+			confirmPassword.classList.remove("is-invalid");
+
+			// Current password required
+			if (currentPassword.value.trim() === "") {
+				document.getElementById("currentPasswordError").innerText =
+					"Current password is required.";
+				currentPassword.classList.add("is-invalid");
+				valid = false;
+			}
+
+			// New password required + length
+			if (newPassword.value.trim() === "") {
+				document.getElementById("newPasswordError").innerText =
+					"New password is required.";
+				newPassword.classList.add("is-invalid");
+				valid = false;
+			}
+			else if (newPassword.value.trim().length < 12) {
+				document.getElementById("newPasswordError").innerText =
+					"New password must be at least 12 characters.";
+				newPassword.classList.add("is-invalid");
+				valid = false;
+			}
+
+			// Confirm password
+			if (confirmPassword.value.trim() === "") {
+				document.getElementById("confirmPasswordError").innerText =
+					"Please confirm your new password.";
+				confirmPassword.classList.add("is-invalid");
+				valid = false;
+			}
+			else if (confirmPassword.value !== newPassword.value) {
+				document.getElementById("confirmPasswordError").innerText =
+					"Passwords do not match.";
+				confirmPassword.classList.add("is-invalid");
+				valid = false;
+			}
+
+			//  BLOCK submission completely
+			if (!valid) {
+				e.preventDefault();
+				e.stopPropagation();
+			}
+
+		});
+
+	});
+</script>
 
 </html>

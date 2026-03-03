@@ -20,28 +20,28 @@
 	<div class="row g-4 mb-5">
 
 		<div class="col-md-3">
-			<div class="card text-center p-4 bg-dark text-white">
+			<div class="card text-center p-4 bg-dark bg-opacity-50 text-dark">
 				<h6 class="text-uppercase small mb-2">Total Passwords</h6>
 				<h2 class="fw-bold" th:text="${audit.totalPasswords}">0</h2>
 			</div>
 		</div>
 
 		<div class="col-md-3">
-			<div class="card text-center p-4 bg-danger text-white">
+			<div class="card text-center p-4 bg-danger bg-opacity-50 text-dark">
 				<h6 class="text-uppercase small mb-2">Weak Passwords</h6>
 				<h2 class="fw-bold" th:text="${audit.weakPasswords}">0</h2>
 			</div>
 		</div>
 
 		<div class="col-md-3">
-			<div class="card text-center p-4 bg-warning text-dark">
+			<div class="card text-center p-4 bg-warning text-dark bg-opacity-50">
 				<h6 class="text-uppercase small mb-2">Reused Passwords</h6>
 				<h2 class="fw-bold" th:text="${audit.reusedPasswords}">0</h2>
 			</div>
 		</div>
 
 		<div class="col-md-3">
-			<div class="card text-center p-4 bg-primary text-white">
+			<div class="card text-center p-4 bg-primary text-dark bg-opacity-50">
 				<h6 class="text-uppercase small mb-2">Old Passwords</h6>
 				<h2 class="fw-bold" th:text="${audit.oldPasswords}">0</h2>
 			</div>
@@ -56,7 +56,7 @@
 
 		<div class="progress rounded-pill" style="height: 28px;">
 
-			<div id="riskBar" class="progress-bar fw-semibold" role="progressbar" style="width: 0%">
+			<div id="riskBar" class="progress-bar fw-semibold" role="progressbar" style="width: 0% ">
 			</div>
 
 		</div>
@@ -73,7 +73,7 @@
 		<!-- Weak -->
 		<div class="col-md-4">
 			<div class="card h-100">
-				<div class="card-header bg-danger text-white fw-semibold">
+				<div class="card-header bg-danger bg-opacity-50 text-dark fw-semibold">
 					Weak Password Accounts
 				</div>
 				<div class="card-body">
@@ -97,7 +97,7 @@
 		<!-- Reused -->
 		<div class="col-md-4">
 			<div class="card h-100">
-				<div class="card-header bg-warning fw-semibold">
+				<div class="card-header bg-warning bg-opacity-50 fw-semibold">
 					Reused Password Accounts
 				</div>
 				<div class="card-body">
@@ -121,7 +121,7 @@
 		<!-- Old -->
 		<div class="col-md-4">
 			<div class="card h-100">
-				<div class="card-header bg-primary text-white fw-semibold">
+				<div class="card-header bg-primary bg-opacity-50 text-dark fw-semibold">
 					Old Password Accounts
 				</div>
 				<div class="card-body">

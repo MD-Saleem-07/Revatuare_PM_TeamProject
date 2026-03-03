@@ -5,15 +5,24 @@
 
 	<div th:fragment="navbar">
 		<nav class="navbar custom-navbar px-4">
-		    <span class="navbar-brand fw-bold brand-text">
-		        Revature PM
-		    </span>
+			<button class="btn btn-outline-light d-lg-none me-2" data-bs-toggle="offcanvas"
+				data-bs-target="#mobileSidebar">
+				<i class="bi bi-list"></i>
+			</button>
+			<a th:href="@{/dashboard}"
+				class="navbar-brand d-flex align-items-center fw-bold brand-text text-decoration-none">
 
-		    <div class="ms-auto">
-		        <a href="/logout" class="btn btn-sm logout-btn">
-		            <i class="bi bi-box-arrow-right"></i> Logout
-		        </a>
-		    </div>
+				<img th:src="@{/images/logo.png}" alt="Logo" class="navbar-logo me-2">
+
+				<span style="color: rgb(0, 0, 255);">Revature PM</span>
+
+			</a>
+
+			<div class="ms-auto">
+				<a href="/logout" class="btn btn-sm logout-btn">
+					<i class="bi bi-box-arrow-right"></i> Logout
+				</a>
+			</div>
 		</nav>
 	</div>
 
