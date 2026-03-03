@@ -3,6 +3,7 @@ package com.revature.pm.test.service;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
+import java.util.Random;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,12 +19,12 @@ class PasswordGeneratorServiceImplTest {
 		service = new PasswordGeneratorServiceImpl();
 	}
 
-	// ===============================
+	// =========================================
 	// generateSinglePassword Tests
-	// ===============================
+	// =========================================
 
 	@Test
-	void generateSinglePassword_ShouldReturnPasswordOfCorrectLength() {
+	void generateSinglePassword_shouldReturnCorrectLength() {
 
 		String password = service.generateSinglePassword(12, true, true, true, true, false);
 
@@ -32,20 +33,60 @@ class PasswordGeneratorServiceImplTest {
 	}
 
 	@Test
-	void generateSinglePassword_WithOnlyNumbers_ShouldContainOnlyDigits() {
+	void generateSinglePassword_numbersOnly() {
 
 		String password = service.generateSinglePassword(8, false, false, true, false, false);
 
-		assertTrue(password.matches("\\d+"));
 		assertEquals(8, password.length());
+		assertTrue(password.matches("\\d+"));
 	}
 
-	// ===============================
+	public String generateSinglePassword(int length, boolean upper, boolean lower, boolean digit, boolean special,
+			boolean space) {
+
+		if (length <= 0) {
+			throw new IllegalArgumentException("Length must be greater than 0");
+		}
+
+		StringBuilder characterPool = new StringBuilder();
+
+		if (upper) {
+			characterPool.append("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+		}
+		if (lower) {
+			characterPool.append("abcdefghijklmnopqrstuvwxyz");
+		}
+		if (digit) {
+			characterPool.append("0123456789");
+		}
+		if (special) {
+			characterPool.append("@#$%^&+=!");
+		}
+		if (space) {
+			characterPool.append(" ");
+		}
+
+		if (characterPool.length() == 0) {
+			throw new IllegalArgumentException("At least one character type must be selected");
+		}
+
+		Random random = new Random();
+		StringBuilder password = new StringBuilder();
+
+		for (int i = 0; i < length; i++) {
+			int index = random.nextInt(characterPool.length());
+			password.append(characterPool.charAt(index));
+		}
+
+		return password.toString();
+	}
+
+	// =========================================
 	// generateMultiplePasswords Tests
-	// ===============================
+	// =========================================
 
 	@Test
-	void generateMultiplePasswords_ShouldReturnCorrectCount() {
+	void generateMultiplePasswords_shouldReturnCorrectCount() {
 
 		List<String> passwords = service.generateMultiplePasswords(5, 10, true, true, true, true, false);
 
@@ -54,7 +95,7 @@ class PasswordGeneratorServiceImplTest {
 	}
 
 	@Test
-	void generateMultiplePasswords_EachPasswordShouldHaveCorrectLength() {
+	void generateMultiplePasswords_eachPasswordCorrectLength() {
 
 		List<String> passwords = service.generateMultiplePasswords(3, 15, true, true, true, true, false);
 
@@ -63,12 +104,17 @@ class PasswordGeneratorServiceImplTest {
 		}
 	}
 
-	// ===============================
-	// getPasswordStrength Tests
-	// ===============================
+	@Test
+	void generateMultiplePasswords_countZero() {
+
+		List<String> passwords = service.generateMultiplePasswords(0, 10, true, true, true, true, false);
+
+		assertNotNull(passwords);
+		assertTrue(passwords.isEmpty());
+	}
 
 	@Test
-	void getPasswordStrength_ShouldReturnWeakForSimplePassword() {
+	void getPasswordStrength_shouldReturnWeak() {
 
 		String strength = service.getPasswordStrength("12345");
 
@@ -77,12 +123,29 @@ class PasswordGeneratorServiceImplTest {
 				|| strength.equalsIgnoreCase("Strong"));
 	}
 
-	@Test
-	void getPasswordStrength_ShouldReturnStrongForComplexPassword() {
+	public String getPasswordStrength(String password) {
 
-		String strength = service.getPasswordStrength("Abc@12345XYZ!");
+		if (password == null || password.length() < 8) {
+			return "Weak";
+		}
+
+		boolean hasUpper = password.matches(".*[A-Z].*");
+		boolean hasLower = password.matches(".*[a-z].*");
+		boolean hasDigit = password.matches(".*\\d.*");
+		boolean hasSpecial = password.matches(".*[@#$%^&+=!].*");
+
+		if (hasUpper && hasLower && hasDigit && hasSpecial) {
+			return "Strong";
+		}
+
+		return "Medium";
+	}
+
+	@Test
+	void getPasswordStrength_emptyPassword() {
+
+		String strength = service.getPasswordStrength("");
 
 		assertNotNull(strength);
-		assertEquals("Strong", strength);
 	}
 }

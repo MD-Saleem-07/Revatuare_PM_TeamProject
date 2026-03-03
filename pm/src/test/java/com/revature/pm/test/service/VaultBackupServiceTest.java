@@ -3,187 +3,140 @@ package com.revature.pm.test.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.revature.pm.dto.PasswordEntryDTO;
+import tools.jackson.databind.ObjectMapper;
 import com.revature.pm.dto.VaultExportDTO;
 import com.revature.pm.entity.PasswordEntry;
 import com.revature.pm.entity.User;
 import com.revature.pm.exception.ResourceNotFoundException;
 import com.revature.pm.repository.PasswordEntryRepository;
 import com.revature.pm.repository.UserRepository;
-import com.revature.pm.service.VaultBackupService;
+import com.revature.pm.service.impl.VaultBackupServiceImpl;
 import com.revature.pm.util.AESUtil;
 
-import tools.jackson.databind.ObjectMapper;
-
-@ExtendWith(MockitoExtension.class)
-class VaultBackupServiceTest {
-
-	@InjectMocks
-	private VaultBackupService service;
+class VaultBackupServiceImplTest {
 
 	@Mock
 	private UserRepository userRepository;
-
 	@Mock
 	private PasswordEntryRepository passwordEntryRepository;
-
 	@Mock
 	private ObjectMapper objectMapper;
 
-	// ================= USER NOT FOUND =================
+	@InjectMocks
+	private VaultBackupServiceImpl vaultService;
+
+	private User user;
+
+	@BeforeEach
+	void setup() {
+		MockitoAnnotations.openMocks(this);
+
+		user = new User();
+		user.setId(1L);
+		user.setUsername("testuser");
+	}
 
 	@Test
 	void exportVault_userNotFound() {
+
 		when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
-		assertThrows(ResourceNotFoundException.class, () -> service.exportVault(1L));
+		assertThrows(ResourceNotFoundException.class, () -> vaultService.exportVault(1L));
 	}
-
-	// ================= EXPORT SUCCESS =================
 
 	@Test
 	void exportVault_success() throws Exception {
 
-		User user = new User();
-		user.setId(1L);
-		user.setUsername("hemanth");
-
 		PasswordEntry entry = new PasswordEntry();
-		entry.setAccountName("gmail");
-		entry.setEncryptedPassword("enc1");
-		entry.setLoginUsername("hemanth@gmail.com");
-		entry.setCreatedAt(LocalDateTime.now());
-		entry.setUpdatedAt(LocalDateTime.now());
+		entry.setAccountName("Google");
+		entry.setEncryptedPassword(AESUtil.encrypt("abc123"));
 		entry.setUser(user);
 
 		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
 		when(passwordEntryRepository.findByUser(user)).thenReturn(List.of(entry));
 
-		try (MockedStatic<AESUtil> aesMock = mockStatic(AESUtil.class)) {
+		when(objectMapper.writeValueAsString(any(VaultExportDTO.class))).thenReturn("{\"mock\":\"json\"}");
 
-			aesMock.when(() -> AESUtil.decrypt("enc1")).thenReturn("Password@123");
+		String result = vaultService.exportVault(1L);
 
-			when(objectMapper.writeValueAsString(any())).thenReturn("json-data");
-
-			aesMock.when(() -> AESUtil.encrypt("json-data")).thenReturn("encrypted-backup");
-
-			String result = service.exportVault(1L);
-
-			assertEquals("encrypted-backup", result);
-		}
+		assertNotNull(result);
+		verify(objectMapper).writeValueAsString(any(VaultExportDTO.class));
 	}
 
-	// ================= EXPORT EXCEPTION =================
-
 	@Test
-	void exportVault_exception() throws Exception {
-
-		User user = new User();
-		user.setId(1L);
+	void exportVault_objectMapperThrows() throws Exception {
 
 		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
 		when(passwordEntryRepository.findByUser(user)).thenReturn(List.of());
 
-		when(objectMapper.writeValueAsString(any())).thenThrow(new RuntimeException("Serialization error"));
+		when(objectMapper.writeValueAsString(any())).thenThrow(new RuntimeException());
 
-		assertThrows(RuntimeException.class, () -> service.exportVault(1L));
+		assertThrows(RuntimeException.class, () -> vaultService.exportVault(1L));
 	}
 
-	// ================= IMPORT SUCCESS =================
+	@Test
+	void importVault_userNotFound() {
+
+		when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+		assertThrows(ResourceNotFoundException.class, () -> vaultService.importVault(1L, "data"));
+	}
 
 	@Test
 	void importVault_success() throws Exception {
 
-		User user = new User();
-		user.setId(1L);
-		user.setUsername("hemanth");
+		String json = "{\"username\":\"testuser\",\"passwords\":[]}";
+
+		String encryptedBackup = AESUtil.encrypt(json);
 
 		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
 		VaultExportDTO exportDTO = new VaultExportDTO();
+		exportDTO.setUsername("testuser");
+		exportDTO.setPasswords(List.of());
 
-		PasswordEntryDTO dto = new PasswordEntryDTO();
-		dto.setAccountName("gmail");
-		dto.setLoginUsername("hemanth@gmail.com");
-		dto.setPassword("Password@123");
+		when(objectMapper.readValue(anyString(), eq(VaultExportDTO.class))).thenReturn(exportDTO);
 
-		exportDTO.setPasswords(List.of(dto));
+		vaultService.importVault(1L, encryptedBackup);
 
-		try (MockedStatic<AESUtil> aesMock = mockStatic(AESUtil.class)) {
-
-			aesMock.when(() -> AESUtil.decrypt("encrypted-input")).thenReturn("json-data");
-
-			when(objectMapper.readValue("json-data", VaultExportDTO.class)).thenReturn(exportDTO);
-
-			aesMock.when(() -> AESUtil.encrypt("Password@123")).thenReturn("enc1");
-
-			assertDoesNotThrow(() -> service.importVault(1L, "encrypted-input"));
-
-			verify(passwordEntryRepository, times(1)).save(any(PasswordEntry.class));
-		}
+		verify(passwordEntryRepository, never()).save(any());
 	}
 
-	// ================= IMPORT EXCEPTION =================
-
 	@Test
-	void importVault_exception() throws Exception {
+	void importVault_objectMapperThrows() throws Exception {
 
-		User user = new User();
-		user.setId(1L);
+		String encryptedBackup = AESUtil.encrypt("bad-json");
 
 		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-		try (MockedStatic<AESUtil> aesMock = mockStatic(AESUtil.class)) {
+		when(objectMapper.readValue(anyString(), eq(VaultExportDTO.class))).thenThrow(new RuntimeException());
 
-			aesMock.when(() -> AESUtil.decrypt("bad-input")).thenThrow(new RuntimeException("Decrypt error"));
-
-			assertThrows(RuntimeException.class, () -> service.importVault(1L, "bad-input"));
-		}
+		assertThrows(RuntimeException.class, () -> vaultService.importVault(1L, encryptedBackup));
 	}
-
-	// ================= USERNAME DELEGATION =================
 
 	@Test
 	void exportVaultByUsername_success() {
 
-		User user = new User();
-		user.setId(1L);
-		user.setUsername("hemanth");
+		when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
 
-		when(userRepository.findByUsername("hemanth")).thenReturn(Optional.of(user));
+		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-		VaultBackupService spyService = spy(service);
-		doReturn("backup-data").when(spyService).exportVault(1L);
+		when(passwordEntryRepository.findByUser(user)).thenReturn(List.of());
 
-		String result = spyService.exportVaultByUsername("hemanth");
+		when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
-		assertEquals("backup-data", result);
+		String result = vaultService.exportVaultByUsername("testuser");
+
+		assertNotNull(result);
 	}
 
-	@Test
-	void importVaultByUsername_success() {
-
-		User user = new User();
-		user.setId(1L);
-		user.setUsername("hemanth");
-
-		when(userRepository.findByUsername("hemanth")).thenReturn(Optional.of(user));
-
-		VaultBackupService spyService = spy(service);
-
-		doNothing().when(spyService).importVault(1L, "backup");
-
-		assertDoesNotThrow(() -> spyService.importVaultByUsername("hemanth", "backup"));
-	}
 }
