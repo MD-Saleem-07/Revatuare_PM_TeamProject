@@ -7,6 +7,8 @@ import com.revature.pm.repository.UserRepository;
 import com.revature.pm.security.JwtUtil;
 import com.revature.pm.service.AuthService;
 
+import jakarta.validation.Valid;
+
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -29,7 +31,7 @@ public class AuthRestController {
 
 	// Register
 	@PostMapping("/register")
-	public ResponseEntity<String> register(@RequestBody RegistrationDTO dto) {
+	public ResponseEntity<String> register(@Valid @RequestBody RegistrationDTO dto) {
 		authService.registerUser(dto);
 		return ResponseEntity.ok("User registered successfully");
 	}
@@ -40,7 +42,7 @@ public class AuthRestController {
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginDTO loginDTO) {
+	public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginDTO loginDTO) {
 
 		LoginResponseDTO response = authService.login(loginDTO);
 
@@ -49,7 +51,7 @@ public class AuthRestController {
 
 	// Change Master Password
 	@PutMapping("/{userId}/change-password")
-	public ResponseEntity<String> changePassword(@PathVariable Long userId, @RequestBody ChangePasswordDTO dto) {
+	public ResponseEntity<String> changePassword(@PathVariable Long userId, @Valid @RequestBody ChangePasswordDTO dto) {
 
 		authService.changeMasterPassword(userId, dto);
 		return ResponseEntity.ok("Password changed successfully");
@@ -57,7 +59,7 @@ public class AuthRestController {
 
 	// Recover Password
 	@PostMapping("/recover")
-	public ResponseEntity<String> recoverPassword(@RequestBody PasswordRecoveryDTO dto) {
+	public ResponseEntity<String> recoverPassword(@Valid @RequestBody PasswordRecoveryDTO dto) {
 
 		authService.recoverMasterPassword(dto);
 		return ResponseEntity.ok("Password recovered successfully");
@@ -70,7 +72,7 @@ public class AuthRestController {
 	}
 
 	@PostMapping("/generate-otp")
-	public ResponseEntity<VerificationCodeDTO> generateOtp(@RequestParam String username) {
+	public ResponseEntity<VerificationCodeDTO> generateOtp(@Valid @RequestParam String username) {
 
 		User user = userRepository.findByUsername(username)
 				.orElseThrow(() -> new ResourceNotFoundException("User not found"));

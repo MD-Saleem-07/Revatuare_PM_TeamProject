@@ -122,7 +122,7 @@
 
 								<button class="btn btn-sm btn-outline-success"
 									th:onclick="'copyPassword(' + ${p.id} + ')'">
-									<i class="bi bi-clipboard"></i>
+									<i class="bi bi-copy"></i>
 								</button>
 							</div>
 						</td>
@@ -452,6 +452,24 @@
 						.classList.remove("d-none");
 				});
 		}
+
+		document.addEventListener("DOMContentLoaded", function () {
+
+			const rows = Array.from(document.querySelectorAll("tbody tr"));
+
+			rows.sort((a, b) => {
+				const nameA = a.children[0].innerText.trim();
+				const nameB = b.children[0].innerText.trim();
+
+				return nameA.localeCompare(nameB, undefined, {
+					sensitivity: 'base'
+				});
+			});
+
+			const tbody = document.querySelector("tbody");
+			tbody.innerHTML = "";
+			rows.forEach(row => tbody.appendChild(row));
+		});
 
 	</script>
 

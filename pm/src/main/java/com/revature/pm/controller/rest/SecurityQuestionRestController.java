@@ -21,6 +21,8 @@ import com.revature.pm.repository.SecurityQuestionRepository;
 import com.revature.pm.repository.UserRepository;
 import com.revature.pm.util.AESUtil;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/security-questions")
 public class SecurityQuestionRestController {
@@ -52,7 +54,7 @@ public class SecurityQuestionRestController {
 	}
 
 	@PutMapping
-	public ResponseEntity<String> updateAnswers(@RequestBody List<SecurityQuestionDTO> dtos,
+	public ResponseEntity<String> updateAnswers(@Valid @RequestBody List<SecurityQuestionDTO> dtos,
 			@RequestParam String masterPassword, Authentication authentication) {
 
 		String username = authentication.getName();

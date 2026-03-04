@@ -36,8 +36,6 @@ import com.revature.pm.dto.UserProfileDTO;
 import com.revature.pm.dto.VerificationCodeDTO;
 import com.revature.pm.dto.ViewPasswordDTO;
 
-
-
 @Controller
 public class PageController {
 

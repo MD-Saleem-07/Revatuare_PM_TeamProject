@@ -5,6 +5,8 @@ import com.revature.pm.dto.PasswordEntryDTO;
 import com.revature.pm.dto.ViewPasswordDTO;
 import com.revature.pm.service.PasswordEntryService;
 
+import jakarta.validation.Valid;
+
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -25,7 +27,7 @@ public class PasswordEntryRestController {
 
 	// Add Password
 	@PostMapping
-	public ResponseEntity<String> addPassword(Authentication authentication, @RequestBody PasswordEntryDTO dto) {
+	public ResponseEntity<String> addPassword(Authentication authentication, @Valid @RequestBody PasswordEntryDTO dto) {
 
 		String username = authentication.getName();
 		passwordEntryService.addPasswordByUsername(username, dto);
@@ -55,7 +57,7 @@ public class PasswordEntryRestController {
 	// Update Password
 	@PutMapping("/{entryId}")
 	public ResponseEntity<String> updatePassword(Authentication authentication, @PathVariable Long entryId,
-			@RequestBody PasswordEntryDTO dto) {
+			@Valid @RequestBody PasswordEntryDTO dto) {
 
 		String username = authentication.getName();
 
@@ -125,7 +127,7 @@ public class PasswordEntryRestController {
 	// View Actual Password
 	@PostMapping("/{entryId}/view")
 	public ResponseEntity<String> viewPassword(Authentication authentication, @PathVariable Long entryId,
-			@RequestBody ViewPasswordDTO dto) {
+			@Valid @RequestBody ViewPasswordDTO dto) {
 
 		String username = authentication.getName();
 

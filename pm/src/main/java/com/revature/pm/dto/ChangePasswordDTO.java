@@ -1,31 +1,38 @@
 package com.revature.pm.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public class ChangePasswordDTO {
 
-    private String currentPassword;
-    private String newPassword;
+	@NotBlank(message = "Current password is required")
+	private String currentPassword;
 
-    public ChangePasswordDTO() {
-    }
+	@NotBlank(message = "New password is required")
+	@Size(min = 8, max = 15, message = "New password must be at least 8 and below 15 characters")
+	private String newPassword;
 
-    public ChangePasswordDTO(String currentPassword, String newPassword) {
-        this.currentPassword = currentPassword;
-        this.newPassword = newPassword;
-    }
+	public ChangePasswordDTO() {
+	}
 
-    public String getCurrentPassword() {
-        return currentPassword;
-    }
+	public ChangePasswordDTO(String currentPassword, String newPassword) {
+		this.currentPassword = currentPassword;
+		this.newPassword = newPassword;
+	}
 
-    public void setCurrentPassword(String currentPassword) {
-        this.currentPassword = currentPassword;
-    }
+	public String getCurrentPassword() {
+		return currentPassword;
+	}
 
-    public String getNewPassword() {
-        return newPassword;
-    }
+	public void setCurrentPassword(String currentPassword) {
+		this.currentPassword = currentPassword;
+	}
 
-    public void setNewPassword(String newPassword) {
-        this.newPassword = newPassword;
-    }
+	public String getNewPassword() {
+		return newPassword;
+	}
+
+	public void setNewPassword(String newPassword) {
+		this.newPassword = newPassword;
+	}
 }

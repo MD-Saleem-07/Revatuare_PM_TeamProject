@@ -1,19 +1,27 @@
 package com.revature.pm.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public class SecurityQuestionDTO {
 
-    private Long id;
-    private String question;
-    private String answer;  // plain answer from UI
+	private Long id;
+	@NotBlank(message = "Security question is required")
+	@Size(max = 255, message = "Security question too long")
+	private String question;
 
-    public SecurityQuestionDTO() {
-    }
+	@NotBlank(message = "Security answer is required")
+	@Size(min = 3, max = 255, message = "Answer must be between 2 and 255 characters")
+	private String answer;
 
-    public SecurityQuestionDTO(Long id, String question, String answer) {
-        this.id = id;
-        this.question = question;
-        this.answer = answer;
-    }
+	public SecurityQuestionDTO() {
+	}
+
+	public SecurityQuestionDTO(Long id, String question, String answer) {
+		this.id = id;
+		this.question = question;
+		this.answer = answer;
+	}
 
 	public Long getId() {
 		return id;
@@ -39,5 +47,4 @@ public class SecurityQuestionDTO {
 		this.answer = answer;
 	}
 
-    
 }
