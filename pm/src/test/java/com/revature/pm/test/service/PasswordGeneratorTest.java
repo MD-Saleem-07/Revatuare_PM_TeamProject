@@ -80,9 +80,9 @@ class PasswordGeneratorServiceImplTest {
 	@Test
 	void getPasswordStrength_ShouldReturnStrongForComplexPassword() {
 
-		String strength = service.getPasswordStrength("Abc@12345XYZ!");
+	    String strength = service.getPasswordStrength("Abc@12345XYZ!");
 
-		assertNotNull(strength);
-		assertEquals("Strong", strength);
-	}
+	    assertNotNull(strength);
+	    assertEquals("Strong", strength);
+	}    
 }
