@@ -123,39 +123,6 @@ class PasswordGeneratorServiceImplTest {
 				|| strength.equalsIgnoreCase("Strong"));
 	}
 
-	public String getPasswordStrength(String password) {
-
-<<<<<<< HEAD
-	    String strength = service.getPasswordStrength("Abc@12345XYZ!");
-=======
-		if (password == null || password.length() < 8) {
-			return "Weak";
-		}
-
-		boolean hasUpper = password.matches(".*[A-Z].*");
-		boolean hasLower = password.matches(".*[a-z].*");
-		boolean hasDigit = password.matches(".*\\d.*");
-		boolean hasSpecial = password.matches(".*[@#$%^&+=!].*");
-
-		if (hasUpper && hasLower && hasDigit && hasSpecial) {
-			return "Strong";
-		}
-
-		return "Medium";
 	}
 
-	@Test
-	void getPasswordStrength_emptyPassword() {
-
-		String strength = service.getPasswordStrength("");
->>>>>>> branch 'develop' of https://github.com/saikumar28072003/Revature-Password-Manager-Team-Project.git
-
-<<<<<<< HEAD
-	    assertNotNull(strength);
-	    assertEquals("Strong", strength);
-	}    
-=======
-		assertNotNull(strength);
-	}
->>>>>>> branch 'develop' of https://github.com/saikumar28072003/Revature-Password-Manager-Team-Project.git
-}
+	
